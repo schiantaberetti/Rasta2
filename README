@@ -1,0 +1,8 @@
+This is Sparta
+
+*********to recompile libfeat*****
+cd libfeat-src
+make
+
+*********to compile************
+make
