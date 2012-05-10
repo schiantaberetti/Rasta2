@@ -86,7 +86,7 @@ IplImage* getCircledTemplate(const IplImage* img)
 	CvPoint br,tl;
 	
 	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),4,100);//get the gray map of red pixels
-	
+	show_scaled_image_and_stop(bn_redMask,600,400);
 	bn_get_containing_box_coordinates(bn_redMask, &tl,&br);//get the ROI of the red pixels
 	
 	bn_filtered=get_bn_without_red(img);//Obtain the image "cleaned"
@@ -267,7 +267,7 @@ IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps
 		
 	
 	selectHue(elabMask,bitMask,hue,eps,sat);
-	cvSmooth(bitMask,outImg,CV_MEDIAN,9,0,0,0);//Faccio la mediana per eliminare rumore
+	cvCopy(bitMask,outImg,NULL);//cvSmooth(bitMask,outImg,CV_MEDIAN,9,0,0,0);//Faccio la mediana per eliminare rumore
 
 	cvReleaseImage(&bitMask);
 	cvReleaseImage(&elabMask);

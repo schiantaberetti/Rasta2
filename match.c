@@ -20,7 +20,7 @@ int main( int argc, char** argv )
   retrieved_image = cvLoadImage( argv[2], 1 );
  
 	template=getCircledTemplate(retrieved_image);
-	show_scaled_image_and_stop(template,400,600);
+	show_scaled_image_and_stop(template,600,400);
 	
 	getTemplatePositionFromImage(template,original_image,&tl,&br);
 	printf("\n%d %d\n",tl.x,tl.y);
@@ -34,7 +34,7 @@ int main( int argc, char** argv )
 	std_show_image(original_image,"original",400,600);
 
 	cvWaitKey(0);
-	
+
 
 	cvReleaseImage(&original_image);
 	cvReleaseImage(&retrieved_image);
