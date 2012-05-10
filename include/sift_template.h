@@ -84,7 +84,7 @@ void getTemplatePositionFromImage(IplImage* img1,IplImage *img2,CvPoint* topLeft
 	cvWarpPerspective( img1, xformed, H, //apply the geometric transformate with respect to sift
 			   CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS,
 			   cvScalarAll( 0 ) );
-
+	
 	///AGGIUNTO
 	CvPoint br,tl;	
 	IplImage *im_gray = cvCreateImage(cvGetSize(xformed),IPL_DEPTH_8U,1);
@@ -98,14 +98,14 @@ void getTemplatePositionFromImage(IplImage* img1,IplImage *img2,CvPoint* topLeft
 	cvReleaseMat( &H );
       }
       
-  
 
   cvReleaseImage( &stacked );
-  cvReleaseImage( &img1 );
-  cvReleaseImage( &img2 );
+ // cvReleaseImage( &img1 );
+//  cvReleaseImage( &img2 );
   kdtree_release( kd_root );
   free( feat1 );
   free( feat2 );
+  
 
 }
 #endif

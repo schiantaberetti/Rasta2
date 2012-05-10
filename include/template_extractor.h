@@ -75,6 +75,36 @@ int main(int argc,char** argv){
 	cvReleaseImage(&probability_map);
 	cvDestroyAllWindows();
 } */
+IplImage* getCircledTemplate(const IplImage* img)
+{
+
+	IplImage* bn_redMask = NULL;
+	IplImage* bn_filtered = NULL;
+	IplImage* bn_pattern = NULL;
+	IplImage* pattern= NULL;
+	
+	CvPoint br,tl;
+	
+	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),4,100);//get the gray map of red pixels
+	
+	bn_get_containing_box_coordinates(bn_redMask, &tl,&br);//get the ROI of the red pixels
+	
+	bn_filtered=get_bn_without_red(img);//Obtain the image "cleaned"
+
+	bn_pattern = img_crop(bn_filtered,cvRect(tl.x,tl.y,br.x-tl.x,br.y-tl.y));//Extract the target pattern from the image
+	
+	bn_closure(bn_pattern,1);//Closure to help in reconstruct the pattern
+	
+	pattern=cvCreateImage(cvGetSize(bn_pattern),bn_pattern->depth,3);
+	cvCvtColor( bn_pattern,pattern, CV_GRAY2BGR);//Convert the pattern to BGR in order to make confrontations
+	
+	cvReleaseImage(&bn_filtered);
+
+	cvReleaseImage(&bn_redMask);
+	cvReleaseImage(&bn_pattern);
+	return pattern;
+}
+
 IplImage* pattern_matching(const IplImage* img,const IplImage* pattern)
 /*Return the probability map of the pattern in the img*/
 {
