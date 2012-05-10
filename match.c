@@ -23,8 +23,8 @@ int main( int argc, char** argv )
 	show_scaled_image_and_stop(template,600,400);
 	
 	getTemplatePositionFromImage(template,original_image,&tl,&br);
-	printf("\n%d %d\n",tl.x,tl.y);
-	printf("%d %d\n",br.x,br.y);
+	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
+	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	cvRectangle(original_image,                    // the dest image 
                 tl,        // top left point 
                 br,       // bottom right point 
