@@ -3,9 +3,6 @@ Rasta2 is a program
 Dependencies:
 In order to compile and use Rasta2 you will need the opencv and the poppler libraries.
 
-*********to recompile libfeat*****
-cd libfeat-src
-make
-
 *********to compile************
-make
+chmod +x compile.sh
+./compile.sh
