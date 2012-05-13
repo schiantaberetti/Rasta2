@@ -9,9 +9,12 @@
 #include "pdftotext.h"
 #include "match.h"
 
-int main(int argc, char** argv)
-{
-	extractTextFromPdf("paper.pdf","output_text",6,6,0,0,600,600);
+int main(int argc, char** argv){	
+	if(argc!=9){
+		printf("Error: usage <pdf_name> <text_file_name> <starting_page> <ending_page> <pdf_x> <pdf_y> <pdf_width> <pdf_height>\n");
+		return 0;
+	}
+	extractTextFromPdf(argv[1],argv[2],atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
 }
 /*
 int test_template( int argc, char** argv )
