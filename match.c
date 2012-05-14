@@ -5,9 +5,11 @@
 
   @version 1.1.2-20100521
 */
+
 #include "template_extractor.h"
 #include "sift_template.h"
 #include "match.h"
+
 
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
@@ -84,3 +86,4 @@ int main( int argc, char** argv )
 	
 	return 0;
 }*/
+

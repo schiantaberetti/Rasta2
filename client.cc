@@ -14,7 +14,12 @@ int main(int argc, char** argv){
 		printf("Error: usage <pdf_name> <text_file_name> <starting_page> <ending_page> <pdf_x> <pdf_y> <pdf_width> <pdf_height>\n");
 		return 0;
 	}
-	extractTextFromPdf(argv[1],argv[2],atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
+	int tlx,tly,width,height;
+	//extractTextFromPdf(argv[1],argv[2],atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
+	extractTextFromPdf("paper.pdf","out.text",1,1,0,0,300,400);
+	getTextCircledPosition( "cena_smarta.jpg","lm_cena_smarta_vert.jpg", &tlx,&tly,&width,&height);
+
+	return 0;
 }
 /*
 int test_template( int argc, char** argv )
