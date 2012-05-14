@@ -7,7 +7,9 @@
 */
 
 #include "pdftotext.h"
-#include "match.h"
+extern "C" { //cplusplus method to import c compiled code.
+#include "match.h" 
+}
 
 int main(int argc, char** argv){	
 	if(argc!=9){
