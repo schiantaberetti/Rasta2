@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 	char* originalImage;
 	//name of the outputfile
 	//TODO 
-	if(argc!=4){
+	if(argc!=5){
 		printf("Error: usage <pdf> <number_of_page> <pdf_page_img> <circled_pdf_image>\n");
 		return 0;
 	}
