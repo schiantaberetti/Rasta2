@@ -7,19 +7,35 @@
 */
 
 #include "pdftotext.h"
+#include <iostream>
 extern "C" { //cplusplus method to import c compiled code.
 #include "match.h" 
 }
 
 int main(int argc, char** argv){	
-	if(argc!=9){
-		printf("Error: usage <pdf_name> <text_file_name> <starting_page> <ending_page> <pdf_x> <pdf_y> <pdf_width> <pdf_height>\n");
+	//variables tha contains the top left corner and the dimension of the red cirle
+	int tlx,tly,width,height;
+	//the number of the page in the pdf document
+	int numberOfPage;
+	//the name of the pdf
+	char* pdfName;
+	//the name of the red circled image
+	char* circledImage;
+	//the name of the original pdf page image 
+	char* originalImage;
+	//name of the outputfile
+	//TODO 
+	if(argc!=3){
+		printf("Error: usage <pdf> <number_of_page> <pdf_page_img> <circled_pdf_image>\n");
 		return 0;
 	}
-	int tlx,tly,width,height;
-	//extractTextFromPdf(argv[1],argv[2],atoi(argv[3]),atoi(argv[4]),atoi(argv[5]),atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
-	extractTextFromPdf("paper.pdf","out.text",1,1,0,0,300,400);
-	getTextCircledPosition( "cena_smarta.jpg","lm_cena_smarta_vert.jpg", &tlx,&tly,&width,&height);
+	pdfName=argv[1];
+	numberOfPage=atoi(argv[2]);
+	originalImage=argv[3];
+	circledImage=argv[4];
+	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
+	extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
+	
 
 	return 0;
 }
