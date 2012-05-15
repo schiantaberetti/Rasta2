@@ -15,6 +15,12 @@ libfeat :
 	cd libfeat-src/
 	make -C libfeat-src
 
+install :
+	mv pdfextractor /usr/bin
+
+uninstall :
+	rm /usr/bin/pdfextractor 
+
 clean :
 	rm libfeat-src/*.o
 	rm lib/libfeat.a
