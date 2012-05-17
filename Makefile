@@ -1,6 +1,6 @@
 POPPLER_LIB = `pkg-config --cflags --libs poppler`
 OPENCV_LIB = `pkg-config --cflags --libs opencv `
-FEAT_LIB = lib/libfeat.a
+FEAT_LIB = lib/libfeat.a lib/libhead.a
 
 EXECUTABLE = pdfextractor
 
