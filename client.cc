@@ -7,6 +7,8 @@
 */
 
 #include "pdftotext.h"
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <iostream>
 extern "C" { //cplusplus method to import c compiled code.
 #include "match.h" 
@@ -33,8 +35,14 @@ int main(int argc, char** argv){
 	numberOfPage=atoi(argv[2]);
 	originalImage=argv[3];
 	circledImage=argv[4];
+	//MODIFICARE
+	ImageInfo_t *pippolo;
+	getImageInfo(circledImage,pippolo);
+	printf("\n%f",ImageInfo.xResolution);
+	//MODIFICARE
 	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
-	extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
+
+	//extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
 	
 
 	return 0;

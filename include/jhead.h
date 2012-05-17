@@ -6,6 +6,9 @@
 // where they get used as possible, so include files only get stuff that 
 // gets used in more than one file.
 //--------------------------------------------------------------------------
+#ifndef _jhead_h_
+#define _jhead_h_ 1
+
 #define _CRT_SECURE_NO_DEPRECATE 1
 
 #include <stdio.h>
@@ -147,6 +150,7 @@ typedef enum {
 void ErrFatal(char * msg);
 void ErrNonfatal(char * msg, int a1, int a2);
 void FileTimeAsString(char * TimeStr);
+void ProcessFile(const char * FileName);
 
 // Prototypes for exif.c functions.
 int Exif2tm(struct tm * timeptr, char * ExifTime);
@@ -253,3 +257,5 @@ extern int ShowTags;
 #define M_DHT   0xC4
 #define M_DRI   0xDD
 #define M_IPTC  0xED          // IPTC marker
+
+#endif

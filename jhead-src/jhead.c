@@ -889,7 +889,7 @@ void ProcessFile(const char * FileName)
         ShowConciseImageInfo();
     }else{
         if (!(DoModify) || ShowTags){
-            ShowImageInfo(ShowFileInfo);
+            //ShowImageInfo(ShowFileInfo);
 
             {
                 // if IPTC section is present, show it also.
