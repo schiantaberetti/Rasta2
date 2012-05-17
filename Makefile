@@ -4,7 +4,7 @@ FEAT_LIB = lib/libfeat.a
 
 EXECUTABLE = pdfextractor
 
-all : libfeat client.cc match.o
+all : libhead libfeat client.cc match.o
 	g++ client.cc -I include match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o$(EXECUTABLE)  
 
 match.o : match.c
@@ -14,6 +14,10 @@ libfeat :
 	cd libfeat-src/
 	make -C libfeat-src
 
+libhead:
+	cd jhead-src
+	make -C jhead-src/
+
 install :
 	mv pdfextractor /usr/bin
 
@@ -22,7 +26,9 @@ uninstall :
 
 clean :
 	rm libfeat-src/*.o
+	rm jhead-src/*.o
 	rm lib/libfeat.a
+	rm lib/libhead.a
 	rm *.o
 	rm $(EXECUTABLE)
 
