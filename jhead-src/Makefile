@@ -8,6 +8,7 @@ FILE_OBJ= jhead.o jpgfile.o paths.o exif.o iptc.o gpsinfo.o makernote.o
 OBJS= $(OBJ)/jhead.o $(OBJ)/jpgfile.o $(OBJ)/paths.o \
 	$(OBJ)/exif.o $(OBJ)/iptc.o $(OBJ)/gpsinfo.o $(OBJ)/makernote.o
 LIB_DIR	= ../lib
+INCLUDE= ../include
 
 all: libhead.a
 
@@ -16,7 +17,7 @@ libhead.a: $(OBJS)
 	ranlib $(LIB_DIR)/$@
 
 $(OBJ)/%.o:$(SRC)/%.c
-	${CC} $(CFLAGS) -c $< -o $@
+	${CC} -I $(INCLUDE) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(FILE_OBJ) libhead.a
