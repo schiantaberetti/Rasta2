@@ -12,6 +12,8 @@
 #define HSV_HUE_RED 0
 #define HSV_HUE_GREEN 120
 #define HSV_HUE_BLUE 240
+#define HUE_EPS	4
+#define SAT_THRES 100
 
 
 IplImage* selectHue(const IplImage* elabMask,IplImage* bitMask,int hue,int eps,int sat);
@@ -85,7 +87,7 @@ IplImage* getCircledTemplate(const IplImage* img)
 	
 	CvPoint br,tl;
 	
-	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),4,100);//get the gray map of red pixels
+	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);//get the gray map of red pixels
 	show_scaled_image_and_stop(bn_redMask,600,400);
 	bn_get_containing_box_coordinates(bn_redMask, &tl,&br);//get the ROI of the red pixels
 	
@@ -170,7 +172,7 @@ IplImage* get_bn_without_red(const IplImage* img)
 /*Return a gray image computed deleting the red component     */
 {
 	IplImage* filtered=getDarkerPixelsMap(img,120);
-	IplImage* redMask=getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),90,50);
+	IplImage* redMask=getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);
 	
 	int i,j;
 	CvScalar pixel;
@@ -267,7 +269,7 @@ IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps
 		
 	
 	selectHue(elabMask,bitMask,hue,eps,sat);
-	cvCopy(bitMask,outImg,NULL);//cvSmooth(bitMask,outImg,CV_MEDIAN,9,0,0,0);//Faccio la mediana per eliminare rumore
+	cvSmooth(bitMask,outImg,CV_MEDIAN,9,0,0,0);//Faccio la mediana per eliminare rumore //cvCopy(bitMask,outImg,NULL);
 
 	cvReleaseImage(&bitMask);
 	cvReleaseImage(&elabMask);
