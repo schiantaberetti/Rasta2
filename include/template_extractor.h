@@ -14,19 +14,22 @@
 #define HSV_HUE_BLUE 240
 #define HUE_EPS	4
 #define SAT_THRES 100
+#define LAB_A_THRES 140
+#define LAB_B_THRES 100
 
 
 IplImage* selectHue(const IplImage* elabMask,IplImage* bitMask,int hue,int eps,int sat);
 IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps,int sat);
 void bn_get_containing_box_coordinates(const IplImage* gray_img,CvPoint* topLeft,CvPoint* bottomRight);
 void show_scaled_image_and_stop(const IplImage*img,int width,int height);
-IplImage* get_bn_without_red(const IplImage* img);
+IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask);
 void bn_reverse(IplImage* img);
 IplImage* getDarkerPixelsMap(const IplImage* img,int threshold);
 void std_show_image(const IplImage* img,char* name ,  int width , int height);
 IplImage* img_crop(IplImage* img,CvRect rect);
 void bn_closure(IplImage* img,int n);
 IplImage* pattern_matching(const IplImage* img,const IplImage* pattern);
+IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
 
 /* ****************************SAMPLE USAGE************************************
 int main(int argc,char** argv){
@@ -79,19 +82,19 @@ int main(int argc,char** argv){
 } */
 IplImage* getCircledTemplate(const IplImage* img)
 {
-
 	IplImage* bn_redMask = NULL;
 	IplImage* bn_filtered = NULL;
 	IplImage* bn_pattern = NULL;
 	IplImage* pattern= NULL;
 	
 	CvPoint br,tl;
-	
-	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);//get the gray map of red pixels
+
+	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES);//getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);//get the gray map of red pixels
+
 	show_scaled_image_and_stop(bn_redMask,600,400);
 	bn_get_containing_box_coordinates(bn_redMask, &tl,&br);//get the ROI of the red pixels
 	
-	bn_filtered=get_bn_without_red(img);//Obtain the image "cleaned"
+	bn_filtered=get_black_pixels_without_mask(img,bn_redMask);//Obtain the image "cleaned"
 
 	bn_pattern = img_crop(bn_filtered,cvRect(tl.x,tl.y,br.x-tl.x,br.y-tl.y));//Extract the target pattern from the image
 	
@@ -104,6 +107,7 @@ IplImage* getCircledTemplate(const IplImage* img)
 
 	cvReleaseImage(&bn_redMask);
 	cvReleaseImage(&bn_pattern);
+
 	return pattern;
 }
 
@@ -168,11 +172,10 @@ void bn_reverse(IplImage* img)
 			cvSet2D(img,i,j,pixel);
 		}
 }
-IplImage* get_bn_without_red(const IplImage* img)
+IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask)
 /*Return a gray image computed deleting the red component     */
 {
 	IplImage* filtered=getDarkerPixelsMap(img,120);
-	IplImage* redMask=getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);
 	
 	int i,j;
 	CvScalar pixel;
@@ -182,7 +185,7 @@ IplImage* get_bn_without_red(const IplImage* img)
 	{
 			for(j=0;j<(filtered->width) * (filtered->nChannels);j+=filtered->nChannels)
 			{
-				pixel=cvGet2D(redMask,i,j/filtered->nChannels);
+				pixel=cvGet2D(mask,i,j/filtered->nChannels);
 				
 
 				if(pixel.val[0]>150)
@@ -194,7 +197,6 @@ IplImage* get_bn_without_red(const IplImage* img)
 			}
 		data+=step;
 	}
-	cvReleaseImage(&redMask);
 	return filtered;
 	
 }
@@ -248,6 +250,36 @@ void bn_get_containing_box_coordinates(const IplImage* gray_img,CvPoint* topLeft
 				
 			}
 	
+}
+IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres)
+/*Given an arbitrary image (img) this function returns a mask of pixel for the a,b coordinates
+ * in the Lab color space          
+\* Typical values for a and b are (140,100).                                    */
+{
+	IplImage* outImg = NULL;
+	IplImage* elabMask = NULL;
+	CvScalar pixel;
+	
+	outImg =  cvCreateImage( cvGetSize(img),IPL_DEPTH_8U,1);
+	elabMask =  cvCreateImage( cvGetSize(img),img->depth,img->nChannels);
+	cvCopyImage(img,elabMask);
+	
+	cvCvtColor( elabMask, elabMask, CV_BGR2Lab );
+	//show_scaled_image_and_stop(elabMask,600,400);
+	int i,j;
+	for(i=0;i<elabMask->height;i++)
+			for(j=0;j<elabMask->width;j++)
+			{
+				pixel = cvGet2D(elabMask,i,j);
+				if(pixel.val[1]>a_thres && pixel.val[2] > b_thres)
+					((uchar*)outImg->imageData)[i*(outImg->widthStep / sizeof(uchar))+j] = 255;
+				else
+					((uchar*)outImg->imageData)[i*(outImg->widthStep / sizeof(uchar))+j] = 0;
+			}
+	cvSmooth(outImg,outImg,CV_MEDIAN,9,0,0,0);
+	
+	cvReleaseImage(&elabMask);
+	return outImg;
 }	
 IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps,int sat)
 /*Given an arbitrary image (img) this function returns a mask of pixel of hue=hue *\
