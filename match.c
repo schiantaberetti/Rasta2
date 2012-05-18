@@ -21,7 +21,8 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	
 	 original_image = cvLoadImage( pdf_image_name, 1 );
   
-  retrieved_image = cvLoadImage( photo_name, 1 );
+  	retrieved_image = cvLoadImage( photo_name, 1 );
+  
  
 	template=getCircledTemplate(retrieved_image);
 	show_scaled_image_and_stop(template,600,400);
@@ -49,6 +50,11 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	cvDestroyAllWindows();
 	
 	return 0;
+}
+
+void getImageInfo(char* name,ImageInfo_t* imageInfo){
+	ProcessFile(name);
+	imageInfo=&ImageInfo;
 }
 /*
 int main( int argc, char** argv )
