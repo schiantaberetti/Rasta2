@@ -3,6 +3,7 @@
 #include "jhead.h"
 
 extern int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height);
-extern void getImageInfo(char* name,ImageInfo_t* imageInfo);
+extern void getImageDate(char* name,char* time);
+extern void parseText(char* text);
 
 #endif

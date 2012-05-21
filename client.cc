@@ -25,7 +25,12 @@ int main(int argc, char** argv){
 	char* circledImage;
 	//the name of the original pdf page image 
 	char* originalImage;
-	//name of the outputfile
+	//time of the photo
+	char time[20];
+	//the name of the output file
+	char* outFileName;
+	//the string to build the output file name
+	std::string outFileStringBuilder("note_from_");
 	//TODO 
 	if(argc!=5){
 		printf("Error: usage <pdf> <number_of_page> <pdf_page_img> <circled_pdf_image>\n");
@@ -35,14 +40,15 @@ int main(int argc, char** argv){
 	numberOfPage=atoi(argv[2]);
 	originalImage=argv[3];
 	circledImage=argv[4];
-	//MODIFICARE
-	ImageInfo_t *pippolo;
-	getImageInfo(circledImage,pippolo);
-	printf("\n%f",ImageInfo.xResolution);
-	//MODIFICARE
+	getImageDate(circledImage,time);
 	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
-
-	//extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
+	outFileStringBuilder.append(pdfName);
+	outFileStringBuilder.append("_in_date_");
+	outFileStringBuilder.append(time);
+	outFileName = new char [outFileStringBuilder.size()+1];
+	strcpy(	outFileName, outFileStringBuilder.c_str());
+	parseText(outFileName);
+	extractTextFromPdf(pdfName,outFileName,numberOfPage,numberOfPage,tlx,tly,width,height);
 	
 
 	return 0;

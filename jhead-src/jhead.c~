@@ -420,7 +420,7 @@ static void DoCommand(const char * FileName, int ShowIt)
 //--------------------------------------------------------------------------
 // check if this file should be skipped based on contents.
 //--------------------------------------------------------------------------
-static int CheckFileSkip(void)
+static int CheckFileSkip(ImageInfo_t* ImageInfo)
 {
     // I sometimes add code here to only process images based on certain
     // criteria - for example, only to convert non progressive Jpegs to progressives, etc..
@@ -429,7 +429,7 @@ static int CheckFileSkip(void)
         // Filtering processing by camera model.
         // This feature is useful when pictures from multiple cameras are colated, 
         // the its found that one of the cameras has the time set incorrectly.
-        if (strstr(ImageInfo.CameraModel, FilterModel) == NULL){
+        if (strstr(ImageInfo->CameraModel, FilterModel) == NULL){
             // Skip.
             return TRUE;
         }
@@ -443,11 +443,11 @@ static int CheckFileSkip(void)
     }
 
     if (PortraitOnly == 1){
-        if (ImageInfo.Width > ImageInfo.Height) return TRUE;
+        if (ImageInfo->Width > ImageInfo->Height) return TRUE;
     }
 
     if (PortraitOnly == -1){
-        if (ImageInfo.Width < ImageInfo.Height) return TRUE;
+        if (ImageInfo->Width < ImageInfo->Height) return TRUE;
     }
 
     return FALSE;
@@ -535,7 +535,7 @@ void RenameAssociated(const char * FileName, char * NewBaseName)
 //--------------------------------------------------------------------------
 // Handle renaming of files by date.
 //--------------------------------------------------------------------------
-static void DoFileRenaming(const char * FileName)
+static void DoFileRenaming(const char * FileName,ImageInfo_t* ImageInfo)
 {
     int NumAlpha = 0;
     int NumDigit = 0;
@@ -562,10 +562,10 @@ static void DoFileRenaming(const char * FileName)
         if (isdigit(FileName[a])) NumDigit += 1;
     }
 
-    if (!Exif2tm(&tm, ImageInfo.DateTime)){
+    if (!Exif2tm(&tm, ImageInfo->DateTime)){
         printf("File '%s' contains no exif date stamp.  Using file date\n",FileName);
         // Use file date/time instead.
-        tm = *localtime(&ImageInfo.FileDateTime);
+        tm = *localtime(&(ImageInfo->FileDateTime));
     }
     
 
@@ -582,7 +582,7 @@ static void DoFileRenaming(const char * FileName)
         // Call mktime to get weekday and such filled in.
         UnixTime = mktime(&tm);
         if ((int)UnixTime == -1){
-            printf("Could not convert %s to unix time",ImageInfo.DateTime);
+            printf("Could not convert %s to unix time",ImageInfo->DateTime);
             return;
         }
 
@@ -690,11 +690,11 @@ static void DoFileRenaming(const char * FileName)
 //--------------------------------------------------------------------------
 // Rotate the image and its thumbnail
 //--------------------------------------------------------------------------
-static int DoAutoRotate(const char * FileName)
+static int DoAutoRotate(const char * FileName,ImageInfo_t* ImageInfo)
 {
-    if (ImageInfo.Orientation >= 2 && ImageInfo.Orientation <= 8){
+    if (ImageInfo->Orientation >= 2 && ImageInfo->Orientation <= 8){
         const char * Argument;
-        Argument = ClearOrientation();
+        Argument = ClearOrientation(ImageInfo);
 
         if (!ZeroRotateTagOnly){
             char RotateCommand[PATH_MAX*2+50];
@@ -708,9 +708,9 @@ static int DoAutoRotate(const char * FileName)
             ApplyCommand = NULL;
 
             // Now rotate the thumbnail, if there is one.
-            if (ImageInfo.ThumbnailOffset && 
-                ImageInfo.ThumbnailSize && 
-                ImageInfo.ThumbnailAtEnd){
+            if (ImageInfo->ThumbnailOffset && 
+                ImageInfo->ThumbnailSize && 
+                ImageInfo->ThumbnailAtEnd){
                 // Must have a thumbnail that exists and is modifieable.
 
                 char ThumbTempName_in[PATH_MAX+5];
@@ -720,13 +720,13 @@ static int DoAutoRotate(const char * FileName)
                 strcat(ThumbTempName_in, ".thi");
                 strcpy(ThumbTempName_out, FileName);
                 strcat(ThumbTempName_out, ".tho");
-                SaveThumbnail(ThumbTempName_in);
+                SaveThumbnail(ThumbTempName_in,ImageInfo);
                 sprintf(RotateCommand,"jpegtran -trim -%s -outfile \"%s\" \"%s\"",
                     Argument, ThumbTempName_out, ThumbTempName_in);
 
                 if (system(RotateCommand) == 0){
                     // Put the thumbnail back in the header
-                    ReplaceThumbnail(ThumbTempName_out);
+                    ReplaceThumbnail(ThumbTempName_out,ImageInfo);
                 }
 
                 unlink(ThumbTempName_in);
@@ -741,10 +741,10 @@ static int DoAutoRotate(const char * FileName)
 //--------------------------------------------------------------------------
 // Regenerate the thumbnail using mogrify
 //--------------------------------------------------------------------------
-static int RegenerateThumbnail(const char * FileName)
+static int RegenerateThumbnail(const char * FileName,ImageInfo_t *ImageInfo)
 {
     char ThumbnailGenCommand[PATH_MAX*2+50];
-    if (ImageInfo.ThumbnailOffset == 0 || ImageInfo.ThumbnailAtEnd == FALSE){
+    if (ImageInfo->ThumbnailOffset == 0 || ImageInfo->ThumbnailAtEnd == FALSE){
         // There is no thumbnail, or the thumbnail is not at the end.
         return FALSE;
     }
@@ -754,7 +754,7 @@ static int RegenerateThumbnail(const char * FileName)
 
     if (system(ThumbnailGenCommand) == 0){
         // Put the thumbnail back in the header
-        return ReplaceThumbnail(FileName);
+        return ReplaceThumbnail(FileName,ImageInfo);
     }else{
         ErrFatal("Unable to run 'mogrify' command");
         return FALSE;
@@ -764,17 +764,17 @@ static int RegenerateThumbnail(const char * FileName)
 //--------------------------------------------------------------------------
 // Set file time as exif time.
 //--------------------------------------------------------------------------
-void FileTimeAsString(char * TimeStr)
+void FileTimeAsString(char * TimeStr,ImageInfo_t* ImageInfo)
 {
     struct tm ts;
-    ts = *localtime(&ImageInfo.FileDateTime);
+    ts = *localtime(&(ImageInfo->FileDateTime));
     strftime(TimeStr, 20, "%Y:%m:%d %H:%M:%S", &ts);
 }
 
 //--------------------------------------------------------------------------
 // Do selected operations to one file at a time.
 //--------------------------------------------------------------------------
-void ProcessFile(const char * FileName)
+void ProcessFile(const char * FileName,ImageInfo_t** ImageInfo)
 {
     int Modified = FALSE;
     ReadMode_t ReadMode;
@@ -790,18 +790,23 @@ void ProcessFile(const char * FileName)
 
     ResetJpgfile();
 
+
     // Start with an empty image information structure.
-    memset(&ImageInfo, 0, sizeof(ImageInfo));
-    ImageInfo.FlashUsed = -1;
-    ImageInfo.MeteringMode = -1;
-    ImageInfo.Whitebalance = -1;
+    //memset(ImageInfo, 0, sizeof(ImageInfo_t));
+    *ImageInfo = (ImageInfo_t*) malloc (sizeof(ImageInfo_t));
+    printf("\n%x\n",*ImageInfo);
+    (*ImageInfo)->FlashUsed = -1;
+    (*ImageInfo)->MeteringMode = -1;
+    (*ImageInfo)->Whitebalance = -1;
+
+
 
     // Store file date/time.
     {
         struct stat st;
         if (stat(FileName, &st) >= 0){
-            ImageInfo.FileDateTime = st.st_mtime;
-            ImageInfo.FileSize = st.st_size;
+            (*ImageInfo)->FileDateTime = st.st_mtime;
+            (*ImageInfo)->FileSize = st.st_size;
         }else{
             ErrFatal("No such file");
         }
@@ -814,35 +819,35 @@ void ProcessFile(const char * FileName)
         }
     }
 
-    strncpy(ImageInfo.FileName, FileName, PATH_MAX);
+    strncpy((*ImageInfo)->FileName, FileName, PATH_MAX);
 
 
     if (ApplyCommand || AutoRotate){
         // Applying a command is special - the headers from the file have to be
         // pre-read, then the command executed, and then the image part of the file read.
 
-        if (!ReadJpegFile(FileName, READ_METADATA)) return;
+        if (!ReadJpegFile(FileName, READ_METADATA,*ImageInfo)) return;
 
         #ifdef MATTHIAS
             if (AutoResize){
                 // Automatic resize computation - to customize for each run...
                 if (AutoResizeCmdStuff() == 0){
-                    DiscardData();
+                    DiscardData(*ImageInfo);
                     return;
                 }
             }
         #endif // MATTHIAS
 
 
-        if (CheckFileSkip()){
-            DiscardData();
+        if (CheckFileSkip(*ImageInfo)){
+            DiscardData(*ImageInfo);
             return;
         }
 
         DiscardAllButExif();
 
         if (AutoRotate){
-            if (DoAutoRotate(FileName)){
+            if (DoAutoRotate(FileName,*ImageInfo)){
                 Modified = TRUE;
             }
         }else{
@@ -864,7 +869,7 @@ void ProcessFile(const char * FileName)
         // Make a relative name.
         RelativeName(RelativeExifName, ExifXferScrFile, FileName);
 
-        if(!ReadJpegFile(RelativeExifName, READ_METADATA)) return;
+        if(!ReadJpegFile(RelativeExifName, READ_METADATA,*ImageInfo)) return;
 
         DiscardAllButExif();    // Don't re-read exif section again on next read.
 
@@ -876,20 +881,20 @@ void ProcessFile(const char * FileName)
         ReadMode |= READ_IMAGE;
     }
 
-    if (!ReadJpegFile(FileName, ReadMode)) return;
+    if (!ReadJpegFile(FileName, ReadMode,*ImageInfo)) return;
 
-    if (CheckFileSkip()){
-        DiscardData();
+    if (CheckFileSkip(*ImageInfo)){
+        DiscardData(*ImageInfo);
         return;
     }
 
     FileSequence += 1; // Count files processed.
 
     if (ShowConcise){
-        ShowConciseImageInfo();
+        ShowConciseImageInfo(*ImageInfo);
     }else{
         if (!(DoModify) || ShowTags){
-            ShowImageInfo(ShowFileInfo);
+            //ShowImageInfo(ShowFileInfo);
 
             {
                 // if IPTC section is present, show it also.
@@ -909,19 +914,19 @@ void ProcessFile(const char * FileName)
         // Make a relative name.
         RelativeName(OutFileName, ThumbSaveName, FileName);
 
-        if (SaveThumbnail(OutFileName)){
+        if (SaveThumbnail(OutFileName,*ImageInfo)){
             printf("Created: '%s'\n", OutFileName);
         }
     }
 
     if (CreateExifSection){
         // Make a new minimal exif section
-        create_EXIF();
+        create_EXIF(*ImageInfo);
         Modified = TRUE;
     }
 
     if (RegenThumbnail){
-        if (RegenerateThumbnail(FileName)){
+        if (RegenerateThumbnail(FileName,*ImageInfo)){
             Modified = TRUE;
         }
     }
@@ -931,12 +936,12 @@ void ProcessFile(const char * FileName)
         // Make a relative name.
         RelativeName(ThumbFileName, ThumbInsertName, FileName);
 
-        if (ReplaceThumbnail(ThumbFileName)){
+        if (ReplaceThumbnail(ThumbFileName,*ImageInfo)){
             Modified = TRUE;
         }
     }else if (TrimExif){
         // Deleting thumbnail is just replacing it with a null thumbnail.
-        if (ReplaceThumbnail(NULL)){
+        if (ReplaceThumbnail(NULL,*ImageInfo)){
             Modified = TRUE;
         }
     }
@@ -1055,7 +1060,7 @@ void ProcessFile(const char * FileName)
     }
 
     if (ExifTimeAdjust || ExifTimeSet || DateSetChars || FileTimeToExif){
-       if (ImageInfo.numDateTimeTags){
+       if ((*ImageInfo)->numDateTimeTags){
             struct tm tm;
             time_t UnixTime;
             char TempBuf[50];
@@ -1066,19 +1071,19 @@ void ProcessFile(const char * FileName)
                 UnixTime = ExifTimeSet;
             }else{
                 if (FileTimeToExif){
-                    FileTimeAsString(ImageInfo.DateTime);
+                    FileTimeAsString((*ImageInfo)->DateTime,*ImageInfo);
                 }
                 if (DateSetChars){
-                    memcpy(ImageInfo.DateTime, DateSet, DateSetChars);
+                    memcpy((*ImageInfo)->DateTime, DateSet, DateSetChars);
                     a = 1970;
                     sscanf(DateSet, "%d", &a);
                     if (a < 1970){
-                        strcpy(TempBuf, ImageInfo.DateTime);
+                        strcpy(TempBuf, (*ImageInfo)->DateTime);
                         goto skip_unixtime;
                     }
                 }
                 // A time offset to adjust by was specified.
-                if (!Exif2tm(&tm, ImageInfo.DateTime)) goto badtime;
+                if (!Exif2tm(&tm, (*ImageInfo)->DateTime)) goto badtime;
 
                 // Convert to unix 32 bit time value, add offset, and convert back.
                 UnixTime = mktime(&tm);
@@ -1096,12 +1101,12 @@ void ProcessFile(const char * FileName)
 skip_unixtime:         
             ExifSection = FindSection(M_EXIF);
 
-            for (a = 0; a < ImageInfo.numDateTimeTags; a++) {
+            for (a = 0; a < (*ImageInfo)->numDateTimeTags; a++) {
                 uchar * Pointer;
-                Pointer = ExifSection->Data+ImageInfo.DateTimeOffsets[a]+8;
+                Pointer = ExifSection->Data+(*ImageInfo)->DateTimeOffsets[a]+8;
                 memcpy(Pointer, TempBuf, 19);
             }
-            memcpy(ImageInfo.DateTime, TempBuf, 19);
+            memcpy((*ImageInfo)->DateTime, TempBuf, 19);
 
             Modified = TRUE;
         }else{
@@ -1142,7 +1147,7 @@ skip_unixtime:
         rename(FileName, BackupName);
 
         // Write the new file.
-        WriteJpegFile(FileName);
+        WriteJpegFile(FileName,*ImageInfo);
 
         // Copy the access rights from original file
         if (stat(BackupName, &buf) == 0){
@@ -1163,12 +1168,12 @@ skip_unixtime:
 
     if (Exif2FileTime){
         // Set the file date to the date from the exif header.
-        if (ImageInfo.numDateTimeTags){
+        if ((*ImageInfo)->numDateTimeTags){
             // Converte the file date to Unix time.
             struct tm tm;
             time_t UnixTime;
             struct utimbuf mtime;
-            if (!Exif2tm(&tm, ImageInfo.DateTime)) goto badtime;
+            if (!Exif2tm(&tm, (*ImageInfo)->DateTime)) goto badtime;
 
             UnixTime = mktime(&tm);
             if ((int)UnixTime == -1){
@@ -1192,13 +1197,13 @@ skip_unixtime:
     // I use this feature to put images from multiple digicams in sequence.
 
     if (RenameToDate){
-        DoFileRenaming(FileName);
+        DoFileRenaming(FileName,*ImageInfo);
     }
-    DiscardData();
+    DiscardData(*ImageInfo);
     return;
 badtime:
-    printf("Error: Time '%s': cannot convert to Unix time\n",ImageInfo.DateTime);
-    DiscardData();
+    printf("Error: Time '%s': cannot convert to Unix time\n",(*ImageInfo)->DateTime);
+    DiscardData(*ImageInfo);
 }
 
 //--------------------------------------------------------------------------
@@ -1391,7 +1396,7 @@ time_t ParseCmdDate(char * DateSpecified)
 //--------------------------------------------------------------------------
 // The main program.
 //--------------------------------------------------------------------------
-int main (int argc, char **argv)
+/*int main (int argc, char **argv)
 {
     int argn;
     char * arg;
@@ -1691,4 +1696,4 @@ int main (int argc, char **argv)
     }
 }
 
-
+*/

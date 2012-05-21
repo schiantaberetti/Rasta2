@@ -455,7 +455,7 @@ double ConvertAnyFormat(void * ValuePtr, int Format)
 // Process one of the nested EXIF directories.
 //--------------------------------------------------------------------------
 static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase, 
-        unsigned ExifLength, int NestingLevel)
+        unsigned ExifLength, int NestingLevel,ImageInfo_t *ImageInfo)
 {
     int de;
     int a;
@@ -534,8 +534,8 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
             }
             ValuePtr = OffsetBase+OffsetVal;
 
-            if (OffsetVal > ImageInfo.LargestExifOffset){
-                ImageInfo.LargestExifOffset = OffsetVal;
+            if (OffsetVal > ImageInfo->LargestExifOffset){
+                ImageInfo->LargestExifOffset = OffsetVal;
             }
 
             if (DumpExifMap){
@@ -550,7 +550,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
             if (ShowTags){
                 printf("%s    Maker note: ",IndentString);
             }
-            ProcessMakerNote(ValuePtr, ByteCount, OffsetBase, ExifLength);
+            ProcessMakerNote(ValuePtr, ByteCount, OffsetBase, ExifLength,ImageInfo);
             continue;
         }
 
@@ -614,36 +614,36 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
         switch(Tag){
 
             case TAG_MAKE:
-                strncpy(ImageInfo.CameraMake, (char *)ValuePtr, ByteCount < 31 ? ByteCount : 31);
+                strncpy(ImageInfo->CameraMake, (char *)ValuePtr, ByteCount < 31 ? ByteCount : 31);
                 break;
 
             case TAG_MODEL:
-                strncpy(ImageInfo.CameraModel, (char *)ValuePtr, ByteCount < 39 ? ByteCount : 39);
+                strncpy(ImageInfo->CameraModel, (char *)ValuePtr, ByteCount < 39 ? ByteCount : 39);
                 break;
 
             case TAG_DATETIME_ORIGINAL:
                 // If we get a DATETIME_ORIGINAL, we use that one.
-                strncpy(ImageInfo.DateTime, (char *)ValuePtr, 19);
+                strncpy(ImageInfo->DateTime, (char *)ValuePtr, 19);
                 // Fallthru...
 
             case TAG_DATETIME_DIGITIZED:
             case TAG_DATETIME:
-                if (!isdigit(ImageInfo.DateTime[0])){
+                if (!isdigit(ImageInfo->DateTime[0])){
                     // If we don't already have a DATETIME_ORIGINAL, use whatever
                     // time fields we may have.
-                    strncpy(ImageInfo.DateTime, (char *)ValuePtr, 19);
+                    strncpy(ImageInfo->DateTime, (char *)ValuePtr, 19);
                 }
 
-                if (ImageInfo.numDateTimeTags >= MAX_DATE_COPIES){
+                if (ImageInfo->numDateTimeTags >= MAX_DATE_COPIES){
                     ErrNonfatal("More than %d date fields in Exif.  This is nuts", MAX_DATE_COPIES, 0);
                     break;
                 }
-                ImageInfo.DateTimeOffsets[ImageInfo.numDateTimeTags++] = 
+                ImageInfo->DateTimeOffsets[ImageInfo->numDateTimeTags++] = 
                     (char *)ValuePtr - (char *)OffsetBase;
                 break;
 
             case TAG_WINXP_COMMENT:
-                if (ImageInfo.Comments[0]){ // We already have a jpeg comment.
+                if (ImageInfo->Comments[0]){ // We already have a jpeg comment.
                     // Already have a comment (probably windows comment), skip this one.
                     if (ShowTags) printf("Windows XP commend and other comment in header\n");
                     break; // Already have a windows comment, skip this one.
@@ -651,13 +651,13 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 
                 if (ByteCount > 1){
                     if (ByteCount > MAX_COMMENT_SIZE) ByteCount = MAX_COMMENT_SIZE;
-                    memcpy(ImageInfo.Comments, ValuePtr, ByteCount);
-                    ImageInfo.CommentWidthchars = ByteCount/2;
+                    memcpy(ImageInfo->Comments, ValuePtr, ByteCount);
+                    ImageInfo->CommentWidthchars = ByteCount/2;
                 }
                 break;
 
             case TAG_USERCOMMENT:
-                if (ImageInfo.Comments[0]){ // We already have a jpeg comment.
+                if (ImageInfo->Comments[0]){ // We already have a jpeg comment.
                     // Already have a comment (probably windows comment), skip this one.
                     if (ShowTags) printf("Multiple comments in exif header\n");
                     break; // Already have a windows comment, skip this one.
@@ -683,12 +683,12 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                         for (a=5;a<10 && a < msiz;a++){
                             int c = (ValuePtr)[a];
                             if (c != '\0' && c != ' '){
-                                strncpy(ImageInfo.Comments, (char *)ValuePtr+a, msiz-a);
+                                strncpy(ImageInfo->Comments, (char *)ValuePtr+a, msiz-a);
                                 break;
                             }
                         }
                     }else{
-                        strncpy(ImageInfo.Comments, (char *)ValuePtr, msiz);
+                        strncpy(ImageInfo->Comments, (char *)ValuePtr, msiz);
                     }
                 }
                 break;
@@ -696,15 +696,15 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
             case TAG_FNUMBER:
                 // Simplest way of expressing aperture, so I trust it the most.
                 // (overwrite previously computd value if there is one)
-                ImageInfo.ApertureFNumber = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->ApertureFNumber = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_APERTURE:
             case TAG_MAXAPERTURE:
                 // More relevant info always comes earlier, so only use this field if we don't 
                 // have appropriate aperture information yet.
-                if (ImageInfo.ApertureFNumber == 0){
-                    ImageInfo.ApertureFNumber 
+                if (ImageInfo->ApertureFNumber == 0){
+                    ImageInfo->ApertureFNumber 
                         = (float)exp(ConvertAnyFormat(ValuePtr, Format)*log(2)*0.5);
                 }
                 break;
@@ -712,33 +712,33 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
             case TAG_FOCALLENGTH:
                 // Nice digital cameras actually save the focal length as a function
                 // of how farthey are zoomed in.
-                ImageInfo.FocalLength = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->FocalLength = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_SUBJECT_DISTANCE:
                 // Inidcates the distacne the autofocus camera is focused to.
                 // Tends to be less accurate as distance increases.
-                ImageInfo.Distance = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->Distance = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_EXPOSURETIME:
                 // Simplest way of expressing exposure time, so I trust it most.
                 // (overwrite previously computd value if there is one)
-                ImageInfo.ExposureTime = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->ExposureTime = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_SHUTTERSPEED:
                 // More complicated way of expressing exposure time, so only use
                 // this value if we don't already have it from somewhere else.
-                if (ImageInfo.ExposureTime == 0){
-                    ImageInfo.ExposureTime 
+                if (ImageInfo->ExposureTime == 0){
+                    ImageInfo->ExposureTime 
                         = (float)(1/exp(ConvertAnyFormat(ValuePtr, Format)*log(2)));
                 }
                 break;
 
 
             case TAG_FLASH:
-                ImageInfo.FlashUsed=(int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->FlashUsed=(int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_ORIENTATION:
@@ -751,11 +751,11 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                 OrientationPtr[NumOrientations] = ValuePtr;
                 OrientationNumFormat[NumOrientations] = Format;
                 if (NumOrientations == 0){
-                    ImageInfo.Orientation = (int)ConvertAnyFormat(ValuePtr, Format);
+                    ImageInfo->Orientation = (int)ConvertAnyFormat(ValuePtr, Format);
                 }
-                if (ImageInfo.Orientation < 0 || ImageInfo.Orientation > 8){
-                    ErrNonfatal("Undefined rotation value %d in Exif", ImageInfo.Orientation, 0);
-                    ImageInfo.Orientation = 0;
+                if (ImageInfo->Orientation < 0 || ImageInfo->Orientation > 8){
+                    ErrNonfatal("Undefined rotation value %d in Exif", ImageInfo->Orientation, 0);
+                    ImageInfo->Orientation = 0;
                 }
                 NumOrientations += 1;
                 break;
@@ -789,48 +789,48 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                 break;
 
             case TAG_EXPOSURE_BIAS:
-                ImageInfo.ExposureBias = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->ExposureBias = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_WHITEBALANCE:
-                ImageInfo.Whitebalance = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->Whitebalance = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_LIGHT_SOURCE:
-                ImageInfo.LightSource = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->LightSource = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_METERING_MODE:
-                ImageInfo.MeteringMode = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->MeteringMode = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_EXPOSURE_PROGRAM:
-                ImageInfo.ExposureProgram = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->ExposureProgram = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_EXPOSURE_INDEX:
-                if (ImageInfo.ISOequivalent == 0){
+                if (ImageInfo->ISOequivalent == 0){
                     // Exposure index and ISO equivalent are often used interchangeably,
                     // so we will do the same in jhead.
                     // http://photography.about.com/library/glossary/bldef_ei.htm
-                    ImageInfo.ISOequivalent = (int)ConvertAnyFormat(ValuePtr, Format);
+                    ImageInfo->ISOequivalent = (int)ConvertAnyFormat(ValuePtr, Format);
                 }
                 break;
 
             case TAG_EXPOSURE_MODE:
-                ImageInfo.ExposureMode = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->ExposureMode = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_ISO_EQUIVALENT:
-                ImageInfo.ISOequivalent = (int)ConvertAnyFormat(ValuePtr, Format);
-                if ( ImageInfo.ISOequivalent < 50 ){
+                ImageInfo->ISOequivalent = (int)ConvertAnyFormat(ValuePtr, Format);
+                if ( ImageInfo->ISOequivalent < 50 ){
                     // Fixes strange encoding on some older digicams.
-                    ImageInfo.ISOequivalent *= 200;
+                    ImageInfo->ISOequivalent *= 200;
                 }
                 break;
 
             case TAG_DIGITALZOOMRATIO:
-                ImageInfo.DigitalZoomRatio = (float)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->DigitalZoomRatio = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_THUMBNAIL_OFFSET:
@@ -840,7 +840,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 
             case TAG_THUMBNAIL_LENGTH:
                 ThumbnailSize = (unsigned)ConvertAnyFormat(ValuePtr, Format);
-                ImageInfo.ThumbnailSizeOffset = ValuePtr-OffsetBase;
+                ImageInfo->ThumbnailSizeOffset = ValuePtr-OffsetBase;
                 break;
 
             case TAG_EXIF_OFFSET:
@@ -854,7 +854,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                     if (SubdirStart < OffsetBase || SubdirStart > OffsetBase+ExifLength){
                         ErrNonfatal("Illegal Exif or interop ofset directory link",0,0);
                     }else{
-                        ProcessExifDir(SubdirStart, OffsetBase, ExifLength, NestingLevel+1);
+                        ProcessExifDir(SubdirStart, OffsetBase, ExifLength, NestingLevel+1,ImageInfo);
                     }
                     continue;
                 }
@@ -868,7 +868,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                     if (SubdirStart < OffsetBase || SubdirStart > OffsetBase+ExifLength){
                         ErrNonfatal("Illegal GPS directory link in Exif",0,0);
                     }else{
-                        ProcessGpsInfo(SubdirStart, ByteCount, OffsetBase, ExifLength);
+                        ProcessGpsInfo(SubdirStart, ByteCount, OffsetBase, ExifLength,ImageInfo);
                     }
                     continue;
                 }
@@ -878,36 +878,36 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                 // The focal length equivalent 35 mm is a 2.2 tag (defined as of April 2002)
                 // if its present, use it to compute equivalent focal length instead of 
                 // computing it from sensor geometry and actual focal length.
-                ImageInfo.FocalLength35mmEquiv = (unsigned)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->FocalLength35mmEquiv = (unsigned)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_DISTANCE_RANGE:
                 // Three possible standard values:
                 //   1 = macro, 2 = close, 3 = distant
-                ImageInfo.DistanceRange = (int)ConvertAnyFormat(ValuePtr, Format);
+                ImageInfo->DistanceRange = (int)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
 
 
             case TAG_X_RESOLUTION:
                 if (NestingLevel==0) {// Only use the values from the top level directory
-                    ImageInfo.xResolution = (float)ConvertAnyFormat(ValuePtr,Format);
+                    ImageInfo->xResolution = (float)ConvertAnyFormat(ValuePtr,Format);
                     // if yResolution has not been set, use the value of xResolution
-                    if (ImageInfo.yResolution == 0.0) ImageInfo.yResolution = ImageInfo.xResolution;
+                    if (ImageInfo->yResolution == 0.0) ImageInfo->yResolution = ImageInfo->xResolution;
                 }
                 break;
 
             case TAG_Y_RESOLUTION:
                 if (NestingLevel==0) {// Only use the values from the top level directory
-                    ImageInfo.yResolution = (float)ConvertAnyFormat(ValuePtr,Format);
+                    ImageInfo->yResolution = (float)ConvertAnyFormat(ValuePtr,Format);
                     // if xResolution has not been set, use the value of yResolution
-                    if (ImageInfo.xResolution == 0.0) ImageInfo.xResolution = ImageInfo.yResolution;
+                    if (ImageInfo->xResolution == 0.0) ImageInfo->xResolution = ImageInfo->yResolution;
                 }
                 break;
 
             case TAG_RESOLUTION_UNIT:
                 if (NestingLevel==0) {// Only use the values from the top level directory
-                    ImageInfo.ResolutionUnit = (int) ConvertAnyFormat(ValuePtr,Format);
+                    ImageInfo->ResolutionUnit = (int) ConvertAnyFormat(ValuePtr,Format);
                 }
                 break;
 
@@ -938,11 +938,11 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                 }else{
                     if (SubdirStart <= OffsetBase+ExifLength){
                         if (ShowTags) printf("%s    Continued directory ",IndentString);
-                        ProcessExifDir(SubdirStart, OffsetBase, ExifLength, NestingLevel+1);
+                        ProcessExifDir(SubdirStart, OffsetBase, ExifLength, NestingLevel+1,ImageInfo);
                     }
                 }
-                if (Offset > ImageInfo.LargestExifOffset){
-                    ImageInfo.LargestExifOffset = Offset;
+                if (Offset > ImageInfo->LargestExifOffset){
+                    ImageInfo->LargestExifOffset = Offset;
                 }
             }
         }else{
@@ -951,7 +951,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
     }
 
     if (ThumbnailOffset){
-        ImageInfo.ThumbnailAtEnd = FALSE;
+        ImageInfo->ThumbnailAtEnd = FALSE;
 
         if (DumpExifMap){
             printf("Map: %05d-%05d: Thumbnail\n",ThumbnailOffset, ThumbnailOffset+ThumbnailSize);
@@ -967,8 +967,8 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 
             }
             // The thumbnail pointer appears to be valid.  Store it.
-            ImageInfo.ThumbnailOffset = ThumbnailOffset;
-            ImageInfo.ThumbnailSize = ThumbnailSize;
+            ImageInfo->ThumbnailOffset = ThumbnailOffset;
+            ImageInfo->ThumbnailSize = ThumbnailSize;
 
             if (ShowTags){
                 printf("Thumbnail size: %d bytes\n",ThumbnailSize);
@@ -982,7 +982,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 // Process a EXIF marker
 // Describes all the drivel that most digital cameras include...
 //--------------------------------------------------------------------------
-void process_EXIF (unsigned char * ExifSection, unsigned int length)
+void process_EXIF (unsigned char * ExifSection, unsigned int length,ImageInfo_t* ImageInfo)
 {
     unsigned int FirstOffset;
 
@@ -1036,9 +1036,9 @@ void process_EXIF (unsigned char * ExifSection, unsigned int length)
 
 
     // First directory starts 16 bytes in.  All offset are relative to 8 bytes in.
-    ProcessExifDir(ExifSection+8+FirstOffset, ExifSection+8, length-8, 0);
+    ProcessExifDir(ExifSection+8+FirstOffset, ExifSection+8, length-8, 0,ImageInfo);
 
-    ImageInfo.ThumbnailAtEnd = ImageInfo.ThumbnailOffset >= ImageInfo.LargestExifOffset ? TRUE : FALSE;
+    ImageInfo->ThumbnailAtEnd = ImageInfo->ThumbnailOffset >= ImageInfo->LargestExifOffset ? TRUE : FALSE;
 
     if (DumpExifMap){
         unsigned a,b;
@@ -1057,12 +1057,12 @@ void process_EXIF (unsigned char * ExifSection, unsigned int length)
         // they don't adjust the indicated focal plane resolution units when using less
         // than maximum resolution, so the CCDWidth value comes out too small.  Nothing
         // that Jhad can do about it - its a camera problem.
-        ImageInfo.CCDWidth = (float)(ExifImageWidth * FocalplaneUnits / FocalplaneXRes);
+        ImageInfo->CCDWidth = (float)(ExifImageWidth * FocalplaneUnits / FocalplaneXRes);
 
-        if (ImageInfo.FocalLength && ImageInfo.FocalLength35mmEquiv == 0){
+        if (ImageInfo->FocalLength && ImageInfo->FocalLength35mmEquiv == 0){
             // Compute 35 mm equivalent focal length based on sensor geometry if we haven't
             // already got it explicitly from a tag.
-            ImageInfo.FocalLength35mmEquiv = (int)(ImageInfo.FocalLength/ImageInfo.CCDWidth*36 + 0.5);
+            ImageInfo->FocalLength35mmEquiv = (int)(ImageInfo->FocalLength/ImageInfo->CCDWidth*36 + 0.5);
         }
     }
 }
@@ -1072,7 +1072,7 @@ void process_EXIF (unsigned char * ExifSection, unsigned int length)
 // Create minimal exif header - just date and thumbnail pointers,
 // so that date and thumbnail may be filled later.
 //--------------------------------------------------------------------------
-void create_EXIF(void)
+void create_EXIF(ImageInfo_t *ImageInfo)
 {
     char Buffer[256];
 
@@ -1108,13 +1108,13 @@ void create_EXIF(void)
             DirIndex += 12;
 
             DateIndex = DataWriteIndex;
-            if (ImageInfo.numDateTimeTags){
+            if (ImageInfo->numDateTimeTags){
                 // If we had a pre-existing exif header, use time from that.
-                memcpy(Buffer+DataWriteIndex, ImageInfo.DateTime, 19);
+                memcpy(Buffer+DataWriteIndex, ImageInfo->DateTime, 19);
                 Buffer[DataWriteIndex+19] = '\0';
             }else{
                 // Oterwise, use the file's timestamp.
-                FileTimeAsString(Buffer+DataWriteIndex);
+                FileTimeAsString(Buffer+DataWriteIndex,ImageInfo);
             }
             DataWriteIndex += 20;
         
@@ -1203,14 +1203,14 @@ void create_EXIF(void)
 
         // Re-parse new exif section, now that its in place
         // otherwise, we risk touching data that has already been freed.
-        process_EXIF(NewBuf, DataWriteIndex);
+        process_EXIF(NewBuf, DataWriteIndex,ImageInfo);
     }
 }
 
 //--------------------------------------------------------------------------
 // Cler the rotation tag in the exif header to 1.
 //--------------------------------------------------------------------------
-const char * ClearOrientation(void)
+const char * ClearOrientation(ImageInfo_t* ImageInfo)
 {
     int a;
     if (NumOrientations == 0) return NULL;
@@ -1242,7 +1242,7 @@ const char * ClearOrientation(void)
         }
     }
 
-    return OrientTab[ImageInfo.Orientation];
+    return OrientTab[ImageInfo->Orientation];
 }
 
 
@@ -1250,15 +1250,15 @@ const char * ClearOrientation(void)
 //--------------------------------------------------------------------------
 // Remove thumbnail out of the exif image.
 //--------------------------------------------------------------------------
-int RemoveThumbnail(unsigned char * ExifSection)
+int RemoveThumbnail(unsigned char * ExifSection,ImageInfo_t *ImageInfo)
 {
     if (!DirWithThumbnailPtrs || 
-        ImageInfo.ThumbnailOffset == 0 || 
-        ImageInfo.ThumbnailSize == 0){
+        ImageInfo->ThumbnailOffset == 0 || 
+        ImageInfo->ThumbnailSize == 0){
         // No thumbnail, or already deleted it.
         return 0;
     }
-    if (ImageInfo.ThumbnailAtEnd == FALSE){
+    if (ImageInfo->ThumbnailAtEnd == FALSE){
         ErrNonfatal("Thumbnail not at end of Exif header, can't remove it", 0, 0);
         return 0;
     }
@@ -1286,7 +1286,7 @@ int RemoveThumbnail(unsigned char * ExifSection)
     }
 
     // This is how far the non thumbnail data went.
-    return ImageInfo.ThumbnailOffset+8;
+    return ImageInfo->ThumbnailOffset+8;
 
 }
 
@@ -1335,41 +1335,41 @@ int Exif2tm(struct tm * timeptr, char * ExifTime)
 // Show the collected image info, displaying camera F-stop and shutter speed
 // in a consistent and legible fashion.
 //--------------------------------------------------------------------------
-void ShowImageInfo(int ShowFileInfo)
+void ShowImageInfo(int ShowFileInfo,ImageInfo_t* ImageInfo)
 {
     if (ShowFileInfo){
-        printf("File name    : %s\n",ImageInfo.FileName);
-        printf("File size    : %d bytes\n",ImageInfo.FileSize);
+        printf("File name    : %s\n",ImageInfo->FileName);
+        printf("File size    : %d bytes\n",ImageInfo->FileSize);
 
         {
             char Temp[20];
-            FileTimeAsString(Temp);
+            FileTimeAsString(Temp,ImageInfo);
             printf("File date    : %s\n",Temp);
         }
     }
 
-    if (ImageInfo.CameraMake[0]){
-        printf("Camera make  : %s\n",ImageInfo.CameraMake);
-        printf("Camera model : %s\n",ImageInfo.CameraModel);
+    if (ImageInfo->CameraMake[0]){
+        printf("Camera make  : %s\n",ImageInfo->CameraMake);
+        printf("Camera model : %s\n",ImageInfo->CameraModel);
     }
-    if (ImageInfo.DateTime[0]){
-        printf("Date/Time    : %s\n",ImageInfo.DateTime);
+    if (ImageInfo->DateTime[0]){
+        printf("Date/Time    : %s\n",ImageInfo->DateTime);
     }
-    printf("Resolution   : %d x %d\n",ImageInfo.Width, ImageInfo.Height);
+    printf("Resolution   : %d x %d\n",ImageInfo->Width, ImageInfo->Height);
 
-    if (ImageInfo.Orientation > 1){
+    if (ImageInfo->Orientation > 1){
         // Only print orientation if one was supplied, and if its not 1 (normal orientation)
-        printf("Orientation  : %s\n", OrientTab[ImageInfo.Orientation]);
+        printf("Orientation  : %s\n", OrientTab[ImageInfo->Orientation]);
     }
 
-    if (ImageInfo.IsColor == 0){
+    if (ImageInfo->IsColor == 0){
         printf("Color/bw     : Black and white\n");
     }
 
-    if (ImageInfo.FlashUsed >= 0){
-        if (ImageInfo.FlashUsed & 1){    
+    if (ImageInfo->FlashUsed >= 0){
+        if (ImageInfo->FlashUsed & 1){    
             printf("Flash used   : Yes");
-            switch (ImageInfo.FlashUsed){
+            switch (ImageInfo->FlashUsed){
 	            case 0x5: printf(" (Strobe light not detected)"); break;
 	            case 0x7: printf(" (Strobe light detected) "); break;
 	            case 0x9: printf(" (manual)"); break;
@@ -1390,7 +1390,7 @@ void ShowImageInfo(int ShowFileInfo)
             }
         }else{
             printf("Flash used   : No");
-            switch (ImageInfo.FlashUsed){
+            switch (ImageInfo->FlashUsed){
 	            case 0x18:printf(" (auto)"); break;
             }
         }
@@ -1398,56 +1398,56 @@ void ShowImageInfo(int ShowFileInfo)
     }
 
 
-    if (ImageInfo.FocalLength){
-        printf("Focal length : %4.1fmm",(double)ImageInfo.FocalLength);
-        if (ImageInfo.FocalLength35mmEquiv){
-            printf("  (35mm equivalent: %dmm)", ImageInfo.FocalLength35mmEquiv);
+    if (ImageInfo->FocalLength){
+        printf("Focal length : %4.1fmm",(double)ImageInfo->FocalLength);
+        if (ImageInfo->FocalLength35mmEquiv){
+            printf("  (35mm equivalent: %dmm)", ImageInfo->FocalLength35mmEquiv);
         }
         printf("\n");
     }
 
-    if (ImageInfo.DigitalZoomRatio > 1){
+    if (ImageInfo->DigitalZoomRatio > 1){
         // Digital zoom used.  Shame on you!
-        printf("Digital Zoom : %1.3fx\n", (double)ImageInfo.DigitalZoomRatio);
+        printf("Digital Zoom : %1.3fx\n", (double)ImageInfo->DigitalZoomRatio);
     }
 
-    if (ImageInfo.CCDWidth){
-        printf("CCD width    : %4.2fmm\n",(double)ImageInfo.CCDWidth);
+    if (ImageInfo->CCDWidth){
+        printf("CCD width    : %4.2fmm\n",(double)ImageInfo->CCDWidth);
     }
 
-    if (ImageInfo.ExposureTime){
-        if (ImageInfo.ExposureTime < 0.010){
-            printf("Exposure time: %6.4f s ",(double)ImageInfo.ExposureTime);
+    if (ImageInfo->ExposureTime){
+        if (ImageInfo->ExposureTime < 0.010){
+            printf("Exposure time: %6.4f s ",(double)ImageInfo->ExposureTime);
         }else{
-            printf("Exposure time: %5.3f s ",(double)ImageInfo.ExposureTime);
+            printf("Exposure time: %5.3f s ",(double)ImageInfo->ExposureTime);
         }
-        if (ImageInfo.ExposureTime <= 0.5){
-            printf(" (1/%d)",(int)(0.5 + 1/ImageInfo.ExposureTime));
+        if (ImageInfo->ExposureTime <= 0.5){
+            printf(" (1/%d)",(int)(0.5 + 1/ImageInfo->ExposureTime));
         }
         printf("\n");
     }
-    if (ImageInfo.ApertureFNumber){
-        printf("Aperture     : f/%3.1f\n",(double)ImageInfo.ApertureFNumber);
+    if (ImageInfo->ApertureFNumber){
+        printf("Aperture     : f/%3.1f\n",(double)ImageInfo->ApertureFNumber);
     }
-    if (ImageInfo.Distance){
-        if (ImageInfo.Distance < 0){
+    if (ImageInfo->Distance){
+        if (ImageInfo->Distance < 0){
             printf("Focus dist.  : Infinite\n");
         }else{
-            printf("Focus dist.  : %4.2fm\n",(double)ImageInfo.Distance);
+            printf("Focus dist.  : %4.2fm\n",(double)ImageInfo->Distance);
         }
     }
 
-    if (ImageInfo.ISOequivalent){
-        printf("ISO equiv.   : %2d\n",(int)ImageInfo.ISOequivalent);
+    if (ImageInfo->ISOequivalent){
+        printf("ISO equiv.   : %2d\n",(int)ImageInfo->ISOequivalent);
     }
 
-    if (ImageInfo.ExposureBias){
+    if (ImageInfo->ExposureBias){
         // If exposure bias was specified, but set to zero, presumably its no bias at all,
         // so only show it if its nonzero.
-        printf("Exposure bias: %4.2f\n",(double)ImageInfo.ExposureBias);
+        printf("Exposure bias: %4.2f\n",(double)ImageInfo->ExposureBias);
     }
         
-    switch(ImageInfo.Whitebalance) {
+    switch(ImageInfo->Whitebalance) {
         case 1:
             printf("Whitebalance : Manual\n");
             break;
@@ -1457,7 +1457,7 @@ void ShowImageInfo(int ShowFileInfo)
     }
 
     //Quercus: 17-1-2004 Added LightSource, some cams return this, whitebalance or both
-    switch(ImageInfo.LightSource) {
+    switch(ImageInfo->LightSource) {
         case 1:
             printf("Light Source : Daylight\n");
             break;
@@ -1481,9 +1481,9 @@ void ShowImageInfo(int ShowFileInfo)
             // don't bother showing it - it doesn't add any useful information.
     }
 
-    if (ImageInfo.MeteringMode > 0){ // 05-jan-2001 vcs
+    if (ImageInfo->MeteringMode > 0){ // 05-jan-2001 vcs
         printf("Metering Mode: ");
-        switch(ImageInfo.MeteringMode) {
+        switch(ImageInfo->MeteringMode) {
         case 1: printf("average\n"); break;
         case 2: printf("center weight\n"); break;
         case 3: printf("spot\n"); break;
@@ -1491,12 +1491,12 @@ void ShowImageInfo(int ShowFileInfo)
         case 5: printf("pattern\n"); break;
         case 6: printf("partial\n");  break;
         case 255: printf("other\n");  break;
-        default: printf("unknown (%d)\n",ImageInfo.MeteringMode); break;
+        default: printf("unknown (%d)\n",ImageInfo->MeteringMode); break;
         }
     }
 
-    if (ImageInfo.ExposureProgram){ // 05-jan-2001 vcs
-        switch(ImageInfo.ExposureProgram) {
+    if (ImageInfo->ExposureProgram){ // 05-jan-2001 vcs
+        switch(ImageInfo->ExposureProgram) {
         case 1:
             printf("Exposure     : Manual\n");
             break;
@@ -1525,7 +1525,7 @@ void ShowImageInfo(int ShowFileInfo)
             break;
         }
     }
-    switch(ImageInfo.ExposureMode){
+    switch(ImageInfo->ExposureMode){
         case 0: // Automatic (not worth cluttering up output for)
             break;
         case 1: printf("Exposure Mode: Manual\n");
@@ -1534,9 +1534,9 @@ void ShowImageInfo(int ShowFileInfo)
             break;
     }
 
-    if (ImageInfo.DistanceRange) {
+    if (ImageInfo->DistanceRange) {
         printf("Focus range  : ");
-        switch(ImageInfo.DistanceRange) {
+        switch(ImageInfo->DistanceRange) {
             case 1:
                 printf("macro");
                 break;
@@ -1552,7 +1552,7 @@ void ShowImageInfo(int ShowFileInfo)
 
 
 
-    if (ImageInfo.Process != M_SOF0){
+    if (ImageInfo->Process != M_SOF0){
         // don't show it if its the plain old boring 'baseline' process, but do
         // show it if its something else, like 'progressive' (used on web sometimes)
         int a;
@@ -1562,30 +1562,30 @@ void ShowImageInfo(int ShowFileInfo)
                 printf("Jpeg process : Unknown\n");
                 break;
             }
-            if (ProcessTable[a].Tag == ImageInfo.Process){
+            if (ProcessTable[a].Tag == ImageInfo->Process){
                 printf("Jpeg process : %s\n",ProcessTable[a].Desc);
                 break;
             }
         }
     }
 
-    if (ImageInfo.GpsInfoPresent){
-        printf("GPS Latitude : %s\n",ImageInfo.GpsLat);
-        printf("GPS Longitude: %s\n",ImageInfo.GpsLong);
-        if (ImageInfo.GpsAlt[0]) printf("GPS Altitude : %s\n",ImageInfo.GpsAlt);
+    if (ImageInfo->GpsInfoPresent){
+        printf("GPS Latitude : %s\n",ImageInfo->GpsLat);
+        printf("GPS Longitude: %s\n",ImageInfo->GpsLong);
+        if (ImageInfo->GpsAlt[0]) printf("GPS Altitude : %s\n",ImageInfo->GpsAlt);
     }
 
     // Print the comment. Print 'Comment:' for each new line of comment.
-    if (ImageInfo.Comments[0]){
+    if (ImageInfo->Comments[0]){
         int a,c;
         printf("Comment      : ");
-        if (!ImageInfo.CommentWidthchars){
+        if (!ImageInfo->CommentWidthchars){
             for (a=0;a<MAX_COMMENT_SIZE;a++){
-                c = ImageInfo.Comments[a];
+                c = ImageInfo->Comments[a];
                 if (c == '\0') break;
                 if (c == '\n'){
                     // Do not start a new line if the string ends with a carriage return.
-                    if (ImageInfo.Comments[a+1] != '\0'){
+                    if (ImageInfo->Comments[a+1] != '\0'){
                         printf("\nComment      : ");
                     }else{
                         printf("\n");
@@ -1596,7 +1596,7 @@ void ShowImageInfo(int ShowFileInfo)
             }
             printf("\n");
         }else{
-            printf("%.*ls\n", ImageInfo.CommentWidthchars, (wchar_t *)ImageInfo.Comments);
+            printf("%.*ls\n", ImageInfo->CommentWidthchars, (wchar_t *)ImageInfo->Comments);
         }
     }
 }
@@ -1605,33 +1605,33 @@ void ShowImageInfo(int ShowFileInfo)
 //--------------------------------------------------------------------------
 // Summarize highlights of image info on one line (suitable for grep-ing)
 //--------------------------------------------------------------------------
-void ShowConciseImageInfo(void)
+void ShowConciseImageInfo(ImageInfo_t *ImageInfo)
 {
-    printf("\"%s\"",ImageInfo.FileName);
+    printf("\"%s\"",ImageInfo->FileName);
 
-    printf(" %dx%d",ImageInfo.Width, ImageInfo.Height);
+    printf(" %dx%d",ImageInfo->Width, ImageInfo->Height);
 
-    if (ImageInfo.ExposureTime){
-        if (ImageInfo.ExposureTime <= 0.5){
-            printf(" (1/%d)",(int)(0.5 + 1/ImageInfo.ExposureTime));
+    if (ImageInfo->ExposureTime){
+        if (ImageInfo->ExposureTime <= 0.5){
+            printf(" (1/%d)",(int)(0.5 + 1/ImageInfo->ExposureTime));
         }else{
-            printf(" (%1.1f)",ImageInfo.ExposureTime);
+            printf(" (%1.1f)",ImageInfo->ExposureTime);
         }
     }
 
-    if (ImageInfo.ApertureFNumber){
-        printf(" f/%3.1f",(double)ImageInfo.ApertureFNumber);
+    if (ImageInfo->ApertureFNumber){
+        printf(" f/%3.1f",(double)ImageInfo->ApertureFNumber);
     }
 
-    if (ImageInfo.FocalLength35mmEquiv){
-        printf(" f(35)=%dmm",ImageInfo.FocalLength35mmEquiv);
+    if (ImageInfo->FocalLength35mmEquiv){
+        printf(" f(35)=%dmm",ImageInfo->FocalLength35mmEquiv);
     }
 
-    if (ImageInfo.FlashUsed >= 0 && ImageInfo.FlashUsed & 1){
+    if (ImageInfo->FlashUsed >= 0 && ImageInfo->FlashUsed & 1){
         printf(" (flash)");
     }
 
-    if (ImageInfo.IsColor == 0){
+    if (ImageInfo->IsColor == 0){
         printf(" (bw)");
     }
 
