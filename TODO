@@ -1,2 +1,1 @@
-sistemare funzione exif
 aggiungere un controllo sulla dimensione del pattern che nel caso l'area sia sotto una certa soglia lo riscala ampliandolo
