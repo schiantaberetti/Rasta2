@@ -57,9 +57,11 @@ struct feature;
 
 /** default width of descriptor histogram array */
 #define SIFT_DESCR_WIDTH 4
+//4
 
 /** default number of bins per histogram in descriptor array */
 #define SIFT_DESCR_HIST_BINS 8
+//8
 
 /* assumed gaussian blur for input image */
 #define SIFT_INIT_SIGMA 0.5

@@ -43,8 +43,9 @@ int main(int argc, char** argv){
 	getImageDate(circledImage,time);
 	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
 
-
 	outFileStringBuilder.append(pdfName);
+	outFileStringBuilder.append("_from_page_");
+	outFileStringBuilder.append(argv[2]);
 	outFileStringBuilder.append("_in_date_");
 	outFileStringBuilder.append(time);
 	outFileName = new char [outFileStringBuilder.size()+1];

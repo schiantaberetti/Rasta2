@@ -30,6 +30,7 @@ IplImage* img_crop(IplImage* img,CvRect rect);
 void bn_closure(IplImage* img,int n);
 IplImage* pattern_matching(const IplImage* img,const IplImage* pattern);
 IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
+void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br);
 
 /* ****************************SAMPLE USAGE************************************
 int main(int argc,char** argv){
@@ -110,6 +111,21 @@ IplImage* getCircledTemplate(const IplImage* img)
 
 	return pattern;
 }
+void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br)
+{
+	IplImage* bn_redMask = NULL;
+
+	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES);//getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);//get the gray map of red pixels
+
+	show_scaled_image_and_stop(bn_redMask,600,400);
+	bn_get_containing_box_coordinates(bn_redMask, tl,br);//get the ROI of the red pixels
+	
+	
+
+	cvReleaseImage(&bn_redMask);
+
+}
+
 
 IplImage* pattern_matching(const IplImage* img,const IplImage* pattern)
 /*Return the probability map of the pattern in the img*/

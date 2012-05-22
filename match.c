@@ -16,7 +16,8 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 {
 	IplImage* original_image;
 	IplImage* retrieved_image;
-	IplImage* template;
+	IplImage *template;
+	CvMat* transformation_matrix;
 	CvPoint br,tl; //Position of the template in the image
 	
 	 original_image = cvLoadImage( pdf_image_name, 1 );
@@ -24,10 +25,18 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
   	retrieved_image = cvLoadImage( photo_name, 1 );
   
  
-	template=getCircledTemplate(retrieved_image);
+	//template=getCircledTemplate(retrieved_image);
+	getRedAreaCoords(retrieved_image,&tl,&br);
+	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
+	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	
+	transformation_matrix=getProjection(retrieved_image,original_image);
+	perspectiveTrasformation(transformation_matrix,&br);
+	perspectiveTrasformation(transformation_matrix,&tl);
+	//projection=getTemplateProjection(retrieved_image,original_image);
+	//getTemplatePositionFromImage(retrieved_image,original_image,&tl,&br);
 	
-	getTemplatePositionFromImage(template,original_image,&tl,&br);
+
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	cvRectangle(original_image,                    // the dest image 
@@ -45,6 +54,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	*height = br.y - tl.y;
 
 
+	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&original_image);
 	cvReleaseImage(&retrieved_image);
 	cvReleaseImage(&template);

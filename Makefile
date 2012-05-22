@@ -5,10 +5,10 @@ FEAT_LIB = lib/libfeat.a lib/libhead.a
 EXECUTABLE = pdfextractor
 
 all : libhead libfeat client.cc match.o
-	g++ client.cc -I include match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
+	g++ client.cc -I include -w match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
 match.o : match.c
-	cc	-c match.c -I include $(OPENCV_LIB) $(FEAT_LIB) 
+	cc -c match.c -I include -w $(OPENCV_LIB) $(FEAT_LIB) 
 	
 libfeat : 
 	cd libfeat-src/
