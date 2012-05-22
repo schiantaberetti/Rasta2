@@ -16,7 +16,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 {
 	IplImage* original_image;
 	IplImage* retrieved_image;
-	IplImage *template;
+//	IplImage *template;
 	CvMat* transformation_matrix;
 	CvPoint br,tl; //Position of the template in the image
 	
@@ -48,16 +48,16 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	std_show_image(original_image,"original",400,600);
 
 	cvWaitKey(0);
+
 	*tlx = tl.x;
 	*tly = tl.y;
 	*width = br.x - tl.x;
 	*height = br.y - tl.y;
 
-
 	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&original_image);
 	cvReleaseImage(&retrieved_image);
-	cvReleaseImage(&template);
+	//cvReleaseImage(&template);
 	cvDestroyAllWindows();
 	
 	return 0;
