@@ -42,7 +42,7 @@ int main(int argc, char** argv){
 	//MODIFICARE
 	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
 
-	//extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
+	extractTextFromPdf(pdfName,"out.txt",numberOfPage,numberOfPage,tlx,tly,width,height);
 	
 
 	return 0;
