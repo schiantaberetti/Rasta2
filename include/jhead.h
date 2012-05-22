@@ -149,23 +149,23 @@ typedef enum {
 // prototypes for jhead.c functions
 void ErrFatal(char * msg);
 void ErrNonfatal(char * msg, int a1, int a2);
-void FileTimeAsString(char * TimeStr);
-void ProcessFile(const char * FileName);
+void FileTimeAsString(char * TimeStr,ImageInfo_t* ImageInfo);
+void ProcessFile(const char * FileName,ImageInfo_t **ImageInfo);
 
 // Prototypes for exif.c functions.
 int Exif2tm(struct tm * timeptr, char * ExifTime);
-void process_EXIF (unsigned char * CharBuf, unsigned int length);
-int RemoveThumbnail(unsigned char * ExifSection);
-void ShowImageInfo(int ShowFileInfo);
-void ShowConciseImageInfo(void);
-const char * ClearOrientation(void);
+void process_EXIF (unsigned char * CharBuf, unsigned int length,ImageInfo_t *ImageInfo);
+int RemoveThumbnail(unsigned char * ExifSection,ImageInfo_t *ImageInfo);
+void ShowImageInfo(int ShowFileInfo,ImageInfo_t* ImageInfo);
+void ShowConciseImageInfo(ImageInfo_t *ImageInfo);
+const char * ClearOrientation(ImageInfo_t* ImageInfo);
 void PrintFormatNumber(void * ValuePtr, int Format, int ByteCount);
 double ConvertAnyFormat(void * ValuePtr, int Format);
 int Get16u(void * Short);
 unsigned Get32u(void * Long);
 int Get32s(void * Long);
 void Put32u(void * Value, unsigned PutValue);
-void create_EXIF(void);
+void create_EXIF(ImageInfo_t *ImageInfo);
 
 //--------------------------------------------------------------------------
 // Exif format descriptor stuff
@@ -188,11 +188,11 @@ extern const int BytesPerFormat[];
 
 // makernote.c prototypes
 extern void ProcessMakerNote(unsigned char * DirStart, int ByteCount,
-                 unsigned char * OffsetBase, unsigned ExifLength);
+                 unsigned char * OffsetBase, unsigned ExifLength,ImageInfo_t *ImageInfo);
 
 // gpsinfo.c prototypes
 void ProcessGpsInfo(unsigned char * ValuePtr, int ByteCount, 
-                unsigned char * OffsetBase, unsigned ExifLength);
+                unsigned char * OffsetBase, unsigned ExifLength,ImageInfo_t *ImageInfo);
 
 // iptc.c prototpyes
 void show_IPTC (unsigned char * CharBuf, unsigned int length);
@@ -209,22 +209,22 @@ int EnsurePathExists(const char * FileName);
 void CatPath(char * BasePath, const char * FilePath);
 
 // Prototypes from jpgfile.c
-int ReadJpegSections (FILE * infile, ReadMode_t ReadMode);
-void DiscardData(void);
+int ReadJpegSections (FILE * infile, ReadMode_t ReadMode,ImageInfo_t* ImageInfo);
+void DiscardData(ImageInfo_t *ImageInfo);
 void DiscardAllButExif(void);
-int ReadJpegFile(const char * FileName, ReadMode_t ReadMode);
-int ReplaceThumbnail(const char * ThumbFileName);
-int SaveThumbnail(char * ThumbFileName);
+int ReadJpegFile(const char * FileName, ReadMode_t ReadMode,ImageInfo_t* ImageInfo);
+int ReplaceThumbnail(const char * ThumbFileName,ImageInfo_t *ImageInfo);
+int SaveThumbnail(char * ThumbFileName,ImageInfo_t* ImageInfo);
 int RemoveSectionType(int SectionType);
 int RemoveUnknownSections(void);
-void WriteJpegFile(const char * FileName);
+void WriteJpegFile(const char * FileName,ImageInfo_t* ImageInfo);
 Section_t * FindSection(int SectionType);
 Section_t * CreateSection(int SectionType, unsigned char * Data, int size);
 void ResetJpgfile(void);
 
 
 // Variables from jhead.c used by exif.c
-extern ImageInfo_t ImageInfo;
+//extern ImageInfo_t ImageInfo;
 extern int ShowTags;
 
 //--------------------------------------------------------------------------

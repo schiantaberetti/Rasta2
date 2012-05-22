@@ -61,10 +61,27 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	return 0;
 }
 
-void getImageInfo(char* name,ImageInfo_t* imageInfo){
-	ProcessFile(name);
-	imageInfo=&ImageInfo;
+void getImageDate(char* name,char* time){
+/*Returns the date of the image specified by name formatted in YYYY_MM_DD_HH_MM_SS*/
+	ImageInfo_t *imageInfo;
+	ProcessFile(name,&imageInfo);
+        FileTimeAsString(time,imageInfo);
+	parseText(time);
+	free(imageInfo);
 }
+
+void parseText(char* text){
+/*Parse a char array and substitutes some annoying character like /,:,  with _*/
+	int i=0;
+	int length;
+	length=strlen(text);
+	for(i=0;i<length;i++){
+		if(text[i]==':' || text[i]==' '|| text[i]=='/')
+			text[i]='_';
+	}
+
+}
+
 /*
 int main( int argc, char** argv )
 {

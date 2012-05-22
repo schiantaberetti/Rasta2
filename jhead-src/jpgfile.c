@@ -9,7 +9,7 @@
 #include "jhead.h"
 
 // Storage for simplified info extracted from file.
-ImageInfo_t ImageInfo;
+//ImageInfo_t ImageInfo;
 
 
 static Section_t * Sections = NULL;
@@ -34,7 +34,7 @@ static int Get16m(const void * Short)
 // We want to print out the marker contents as legible text;
 // we must guard against random junk and varying newline representations.
 //--------------------------------------------------------------------------
-static void process_COM (const uchar * Data, int length)
+static void process_COM (const uchar * Data, int length,ImageInfo_t* ImageInfo)
 {
     int ch;
     char Comment[MAX_COMMENT_SIZE+1];
@@ -63,34 +63,34 @@ static void process_COM (const uchar * Data, int length)
         printf("COM marker comment: %s\n",Comment);
     }
 
-    strcpy(ImageInfo.Comments,Comment);
-    ImageInfo.CommentWidthchars = 0;
+    strcpy(ImageInfo->Comments,Comment);
+    ImageInfo->CommentWidthchars = 0;
 }
 
  
 //--------------------------------------------------------------------------
 // Process a SOFn marker.  This is useful for the image dimensions
 //--------------------------------------------------------------------------
-static void process_SOFn (const uchar * Data, int marker)
+static void process_SOFn (const uchar * Data, int marker,ImageInfo_t* ImageInfo)
 {
     int data_precision, num_components;
 
     data_precision = Data[2];
-    ImageInfo.Height = Get16m(Data+3);
-    ImageInfo.Width = Get16m(Data+5);
+    ImageInfo->Height = Get16m(Data+3);
+    ImageInfo->Width = Get16m(Data+5);
     num_components = Data[7];
 
     if (num_components == 3){
-        ImageInfo.IsColor = 1;
+        ImageInfo->IsColor = 1;
     }else{
-        ImageInfo.IsColor = 0;
+        ImageInfo->IsColor = 0;
     }
 
-    ImageInfo.Process = marker;
+    ImageInfo->Process = marker;
 
     if (ShowTags){
         printf("JPEG image is %uw * %uh, %d color components, %d bits per sample\n",
-                   ImageInfo.Width, ImageInfo.Height, num_components, data_precision);
+                   ImageInfo->Width, ImageInfo->Height, num_components, data_precision);
     }
 }
 
@@ -116,7 +116,7 @@ void CheckSectionsAllocated(void)
 //--------------------------------------------------------------------------
 // Parse the marker stream until SOS or EOI is seen;
 //--------------------------------------------------------------------------
-int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
+int ReadJpegSections (FILE * infile, ReadMode_t ReadMode,ImageInfo_t* ImageInfo)
 {
     int a;
     int HaveCom = FALSE;
@@ -127,8 +127,8 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
         return FALSE;
     }
 
-    ImageInfo.JfifHeader.XDensity = ImageInfo.JfifHeader.YDensity = 300;
-    ImageInfo.JfifHeader.ResolutionUnits = 1;
+    ImageInfo->JfifHeader.XDensity = ImageInfo->JfifHeader.YDensity = 300;
+    ImageInfo->JfifHeader.ResolutionUnits = 1;
 
     for(;;){
         int itemlen;
@@ -221,7 +221,7 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
                     // Discard this section.
                     free(Sections[--SectionsRead].Data);
                 }else{
-                    process_COM(Data, itemlen);
+                    process_COM(Data, itemlen,ImageInfo);
                     HaveCom = TRUE;
                 }
                 break;
@@ -232,26 +232,26 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
                 // this program will re-create this marker on absence of exif marker.
                 // hence no need to keep the copy from the file.
                 if (memcmp(Data+2, "JFIF\0",5)){
-                    fprintf(stderr,"Header missing JFIF marker\n");
+                    //fprintf(stderr,"Header missing JFIF marker\n");
                 }
                 if (itemlen < 16){
                     fprintf(stderr,"Jfif header too short\n");
                     goto ignore;
                 }
 
-                ImageInfo.JfifHeader.Present = TRUE;
-                ImageInfo.JfifHeader.ResolutionUnits = Data[9];
-                ImageInfo.JfifHeader.XDensity = (Data[10]<<8) | Data[11];
-                ImageInfo.JfifHeader.YDensity = (Data[12]<<8) | Data[13];
+                ImageInfo->JfifHeader.Present = TRUE;
+                ImageInfo->JfifHeader.ResolutionUnits = Data[9];
+                ImageInfo->JfifHeader.XDensity = (Data[10]<<8) | Data[11];
+                ImageInfo->JfifHeader.YDensity = (Data[12]<<8) | Data[13];
                 if (ShowTags){
-                    printf("JFIF SOI marker: Units: %d ",ImageInfo.JfifHeader.ResolutionUnits);
-                    switch(ImageInfo.JfifHeader.ResolutionUnits){
+                    printf("JFIF SOI marker: Units: %d ",ImageInfo->JfifHeader.ResolutionUnits);
+                    switch(ImageInfo->JfifHeader.ResolutionUnits){
                         case 0: printf("(aspect ratio)"); break;
                         case 1: printf("(dots per inch)"); break;
                         case 2: printf("(dots per cm)"); break;
                         default: printf("(unknown)"); break;
                     }
-                    printf("  X-density=%d Y-density=%d\n",ImageInfo.JfifHeader.XDensity, ImageInfo.JfifHeader.YDensity);
+                    printf("  X-density=%d Y-density=%d\n",ImageInfo->JfifHeader.XDensity, ImageInfo->JfifHeader.YDensity);
 
                     if (Data[14] || Data[15]){
                         fprintf(stderr,"Ignoring jfif header thumbnail\n");
@@ -267,7 +267,7 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
                 // There can be different section using the same marker.
                 if (ReadMode & READ_METADATA){
                     if (memcmp(Data+2, "Exif", 4) == 0){
-                        process_EXIF(Data, itemlen);
+                        process_EXIF(Data, itemlen,ImageInfo);
                         break;
                     }else if (memcmp(Data+2, "http:", 5) == 0){
                         Sections[SectionsRead-1].Type = M_XMP; // Change tag for internal purposes.
@@ -309,7 +309,7 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
             case M_SOF13:
             case M_SOF14:
             case M_SOF15:
-                process_SOFn(Data, marker);
+                process_SOFn(Data, marker,ImageInfo);
                 break;
             default:
                 // Skip any other sections.
@@ -325,7 +325,7 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
 //--------------------------------------------------------------------------
 // Discard read data.
 //--------------------------------------------------------------------------
-void DiscardData(void)
+void DiscardData(ImageInfo_t *ImageInfo)
 {
     int a;
 
@@ -333,7 +333,7 @@ void DiscardData(void)
         free(Sections[a].Data);
     }
 
-    memset(&ImageInfo, 0, sizeof(ImageInfo));
+    memset(ImageInfo, 0, sizeof(ImageInfo));
     SectionsRead = 0;
     HaveAll = 0;
 }
@@ -341,7 +341,7 @@ void DiscardData(void)
 //--------------------------------------------------------------------------
 // Read image data.
 //--------------------------------------------------------------------------
-int ReadJpegFile(const char * FileName, ReadMode_t ReadMode)
+int ReadJpegFile(const char * FileName, ReadMode_t ReadMode,ImageInfo_t* ImageInfo)
 {
     FILE * infile;
     int ret;
@@ -355,7 +355,7 @@ int ReadJpegFile(const char * FileName, ReadMode_t ReadMode)
 
 
     // Scan the JPEG headers.
-    ret = ReadJpegSections(infile, ReadMode);
+    ret = ReadJpegSections(infile, ReadMode,ImageInfo);
     if (!ret){
         if (ReadMode == READ_ANY){
             // Process any files mode.  Ignore the fact that it's not
@@ -369,7 +369,7 @@ int ReadJpegFile(const char * FileName, ReadMode_t ReadMode)
     fclose(infile);
 
     if (ret == FALSE){
-        DiscardData();
+        DiscardData(ImageInfo);
     }
     return ret;
 }
@@ -378,11 +378,11 @@ int ReadJpegFile(const char * FileName, ReadMode_t ReadMode)
 //--------------------------------------------------------------------------
 // Replace or remove exif thumbnail
 //--------------------------------------------------------------------------
-int SaveThumbnail(char * ThumbFileName)
+int SaveThumbnail(char * ThumbFileName,ImageInfo_t* ImageInfo)
 {
     FILE * ThumbnailFile;
 
-    if (ImageInfo.ThumbnailOffset == 0 || ImageInfo.ThumbnailSize == 0){
+    if (ImageInfo->ThumbnailOffset == 0 || ImageInfo->ThumbnailSize == 0){
         fprintf(stderr,"Image contains no thumbnail\n");
         return FALSE;
     }
@@ -399,9 +399,9 @@ int SaveThumbnail(char * ThumbFileName)
         uchar * ThumbnailPointer;
         Section_t * ExifSection;
         ExifSection = FindSection(M_EXIF);
-        ThumbnailPointer = ExifSection->Data+ImageInfo.ThumbnailOffset+8;
+        ThumbnailPointer = ExifSection->Data+ImageInfo->ThumbnailOffset+8;
 
-        fwrite(ThumbnailPointer, ImageInfo.ThumbnailSize ,1, ThumbnailFile);
+        fwrite(ThumbnailPointer, ImageInfo->ThumbnailSize ,1, ThumbnailFile);
         fclose(ThumbnailFile);
         return TRUE;
     }else{
@@ -413,14 +413,14 @@ int SaveThumbnail(char * ThumbFileName)
 //--------------------------------------------------------------------------
 // Replace or remove exif thumbnail
 //--------------------------------------------------------------------------
-int ReplaceThumbnail(const char * ThumbFileName)
+int ReplaceThumbnail(const char * ThumbFileName,ImageInfo_t* ImageInfo)
 {
     FILE * ThumbnailFile;
     int ThumbLen, NewExifSize;
     Section_t * ExifSection;
     uchar * ThumbnailPointer;
 
-    if (ImageInfo.ThumbnailOffset == 0 || ImageInfo.ThumbnailAtEnd == FALSE){
+    if (ImageInfo->ThumbnailOffset == 0 || ImageInfo->ThumbnailAtEnd == FALSE){
         if (ThumbFileName == NULL){
             // Delete of nonexistent thumbnail (not even pointers present)
             // No action, no error.
@@ -447,11 +447,11 @@ int ReplaceThumbnail(const char * ThumbFileName)
         ThumbLen = ftell(ThumbnailFile);
         fseek(ThumbnailFile, 0, SEEK_SET);
 
-        if (ThumbLen + ImageInfo.ThumbnailOffset > 0x10000-20){
+        if (ThumbLen + ImageInfo->ThumbnailOffset > 0x10000-20){
             ErrFatal("Thumbnail is too large to insert into exif header");
         }
     }else{
-        if (ImageInfo.ThumbnailSize == 0){
+        if (ImageInfo->ThumbnailSize == 0){
              return FALSE;
         }
 
@@ -461,19 +461,19 @@ int ReplaceThumbnail(const char * ThumbFileName)
 
     ExifSection = FindSection(M_EXIF);
 
-    NewExifSize = ImageInfo.ThumbnailOffset+8+ThumbLen;
+    NewExifSize = (ImageInfo->ThumbnailOffset)+8+ThumbLen;
     ExifSection->Data = (uchar *)realloc(ExifSection->Data, NewExifSize);
 
-    ThumbnailPointer = ExifSection->Data+ImageInfo.ThumbnailOffset+8;
+    ThumbnailPointer = ExifSection->Data+ImageInfo->ThumbnailOffset+8;
 
     if (ThumbnailFile){
         fread(ThumbnailPointer, ThumbLen, 1, ThumbnailFile);
         fclose(ThumbnailFile);
     }
 
-    ImageInfo.ThumbnailSize = ThumbLen;
+    ImageInfo->ThumbnailSize = ThumbLen;
 
-    Put32u(ExifSection->Data+ImageInfo.ThumbnailSizeOffset+8, ThumbLen);
+    Put32u(ExifSection->Data+ImageInfo->ThumbnailSizeOffset+8, ThumbLen);
 
     ExifSection->Data[0] = (uchar)(NewExifSize >> 8);
     ExifSection->Data[1] = (uchar)NewExifSize;
@@ -535,7 +535,7 @@ void DiscardAllButExif(void)
 //--------------------------------------------------------------------------
 // Write image data back to disk.
 //--------------------------------------------------------------------------
-void WriteJpegFile(const char * FileName)
+void WriteJpegFile(const char * FileName,ImageInfo_t* ImageInfo)
 {
     FILE * outfile;
     int a;
@@ -561,37 +561,37 @@ void WriteJpegFile(const char * FileName)
             0x01, 0x01, 0x01, 0x2C, 0x01, 0x2C, 0x00, 0x00 
         };
 
-        if (ImageInfo.ResolutionUnit == 2 || ImageInfo.ResolutionUnit == 3){
+        if (ImageInfo->ResolutionUnit == 2 || ImageInfo->ResolutionUnit == 3){
             // Use the exif resolution info to fill out the jfif header.
             // Usually, for exif images, there's no jfif header, so if wediscard
             // the exif header, use info from the exif header for the jfif header.
             
-            ImageInfo.JfifHeader.ResolutionUnits = (char)(ImageInfo.ResolutionUnit-1);
+            ImageInfo->JfifHeader.ResolutionUnits = (char)(ImageInfo->ResolutionUnit-1);
             // Jfif is 1 and 2, Exif is 2 and 3 for In and cm respecively
-            ImageInfo.JfifHeader.XDensity = (int)ImageInfo.xResolution;
-            ImageInfo.JfifHeader.YDensity = (int)ImageInfo.yResolution;
+            ImageInfo->JfifHeader.XDensity = (int)ImageInfo->xResolution;
+            ImageInfo->JfifHeader.YDensity = (int)ImageInfo->yResolution;
         }
 
-        JfifHead[11] = ImageInfo.JfifHeader.ResolutionUnits;
-        JfifHead[12] = (uchar)(ImageInfo.JfifHeader.XDensity >> 8);
-        JfifHead[13] = (uchar)ImageInfo.JfifHeader.XDensity;
-        JfifHead[14] = (uchar)(ImageInfo.JfifHeader.YDensity >> 8);
-        JfifHead[15] = (uchar)ImageInfo.JfifHeader.YDensity;
+        JfifHead[11] = ImageInfo->JfifHeader.ResolutionUnits;
+        JfifHead[12] = (uchar)(ImageInfo->JfifHeader.XDensity >> 8);
+        JfifHead[13] = (uchar)ImageInfo->JfifHeader.XDensity;
+        JfifHead[14] = (uchar)(ImageInfo->JfifHeader.YDensity >> 8);
+        JfifHead[15] = (uchar)ImageInfo->JfifHeader.YDensity;
         
 
         fwrite(JfifHead, 18, 1, outfile);
 
         // use the values from the exif data for the jfif header, if we have found values
-        if (ImageInfo.ResolutionUnit != 0) { 
+        if (ImageInfo->ResolutionUnit != 0) { 
             // JFIF.ResolutionUnit is {1,2}, EXIF.ResolutionUnit is {2,3}
-            JfifHead[11] = (uchar)ImageInfo.ResolutionUnit - 1; 
+            JfifHead[11] = (uchar)ImageInfo->ResolutionUnit - 1; 
         }
-        if (ImageInfo.xResolution > 0.0 && ImageInfo.yResolution > 0.0) { 
-            JfifHead[12] = (uchar)((int)ImageInfo.xResolution>>8);
-            JfifHead[13] = (uchar)((int)ImageInfo.xResolution);
+        if (ImageInfo->xResolution > 0.0 && ImageInfo->yResolution > 0.0) { 
+            JfifHead[12] = (uchar)((int)ImageInfo->xResolution>>8);
+            JfifHead[13] = (uchar)((int)ImageInfo->xResolution);
 
-            JfifHead[14] = (uchar)((int)ImageInfo.yResolution>>8);
-            JfifHead[15] = (uchar)((int)ImageInfo.yResolution);
+            JfifHead[14] = (uchar)((int)ImageInfo->yResolution>>8);
+            JfifHead[15] = (uchar)((int)ImageInfo->yResolution);
         }
     }
 

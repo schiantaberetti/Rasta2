@@ -53,7 +53,7 @@ static const char * GpsTags[MAX_GPS_TAG+1]= {
 //--------------------------------------------------------------------------
 // Process GPS info directory
 //--------------------------------------------------------------------------
-void ProcessGpsInfo(unsigned char * DirStart, int ByteCountUnused, unsigned char * OffsetBase, unsigned ExifLength)
+void ProcessGpsInfo(unsigned char * DirStart, int ByteCountUnused, unsigned char * OffsetBase, unsigned ExifLength,ImageInfo_t* ImageInfo)
 {
     int de;
     unsigned a;
@@ -66,10 +66,10 @@ void ProcessGpsInfo(unsigned char * DirStart, int ByteCountUnused, unsigned char
         printf("(dir has %d entries)\n",NumDirEntries);
     }
 
-    ImageInfo.GpsInfoPresent = TRUE;
-    strcpy(ImageInfo.GpsLat, "? ?");
-    strcpy(ImageInfo.GpsLong, "? ?");
-    ImageInfo.GpsAlt[0] = 0; 
+    ImageInfo->GpsInfoPresent = TRUE;
+    strcpy(ImageInfo->GpsLat, "? ?");
+    strcpy(ImageInfo->GpsLong, "? ?");
+    ImageInfo->GpsAlt[0] = 0; 
 
     for (de=0;de<NumDirEntries;de++){
         unsigned Tag, Format, Components;
@@ -118,11 +118,11 @@ void ProcessGpsInfo(unsigned char * DirStart, int ByteCountUnused, unsigned char
             double Values[3];
 
             case TAG_GPS_LAT_REF:
-                ImageInfo.GpsLat[0] = ValuePtr[0];
+                ImageInfo->GpsLat[0] = ValuePtr[0];
                 break;
 
             case TAG_GPS_LONG_REF:
-                ImageInfo.GpsLong[0] = ValuePtr[0];
+                ImageInfo->GpsLong[0] = ValuePtr[0];
                 break;
 
             case TAG_GPS_LAT:
@@ -150,18 +150,18 @@ void ProcessGpsInfo(unsigned char * DirStart, int ByteCountUnused, unsigned char
                 sprintf(TempString, FmtString, Values[0], Values[1], Values[2]);
 
                 if (Tag == TAG_GPS_LAT){
-                    strncpy(ImageInfo.GpsLat+2, TempString, 29);
+                    strncpy(ImageInfo->GpsLat+2, TempString, 29);
                 }else{
-                    strncpy(ImageInfo.GpsLong+2, TempString, 29);
+                    strncpy(ImageInfo->GpsLong+2, TempString, 29);
                 }
                 break;
 
             case TAG_GPS_ALT_REF:
-                ImageInfo.GpsAlt[0] = (char)(ValuePtr[0] ? '-' : ' ');
+                ImageInfo->GpsAlt[0] = (char)(ValuePtr[0] ? '-' : ' ');
                 break;
 
             case TAG_GPS_ALT:
-                sprintf(ImageInfo.GpsAlt + 1, "%.2fm", 
+                sprintf(ImageInfo->GpsAlt + 1, "%.2fm", 
                     ConvertAnyFormat(ValuePtr, Format));
                 break;
         }
