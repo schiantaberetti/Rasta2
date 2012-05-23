@@ -10,12 +10,14 @@
 #include "sift_template.h"
 #include "match.h"
 
+#define CROP_DIM	800
 
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
 {
 	IplImage* original_image;
 	IplImage* retrieved_image;
+	IplImage *cropped_sample = NULL;
 //	IplImage *template;
 	CvMat* transformation_matrix;
 	CvPoint br,tl; //Position of the template in the image
@@ -30,7 +32,9 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	
-	transformation_matrix=getProjection(retrieved_image,original_image);
+	cropped_sample = getCentredROI(retrieved_image,CROP_DIM,CROP_DIM);
+	
+	transformation_matrix=getProjection(cropped_sample,original_image);
 	perspectiveTrasformation(transformation_matrix,&br);
 	perspectiveTrasformation(transformation_matrix,&tl);
 	//projection=getTemplateProjection(retrieved_image,original_image);
@@ -54,6 +58,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	*width = br.x - tl.x;
 	*height = br.y - tl.y;
 
+	cvReleaseImage(&cropped_sample);
 	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&original_image);
 	cvReleaseImage(&retrieved_image);

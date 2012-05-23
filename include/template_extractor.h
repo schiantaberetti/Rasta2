@@ -31,7 +31,7 @@ void bn_closure(IplImage* img,int n);
 IplImage* pattern_matching(const IplImage* img,const IplImage* pattern);
 IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
 void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br);
-
+IplImage* getCentredROI(const IplImage *img,int width,int height);
 /* ****************************SAMPLE USAGE************************************
 int main(int argc,char** argv){
 	IplImage* img = NULL;
@@ -81,6 +81,31 @@ int main(int argc,char** argv){
 	cvReleaseImage(&probability_map);
 	cvDestroyAllWindows();
 } */
+IplImage* getCentredROI(const IplImage *img,int width,int height)
+/*Crop the center of the image of dimension width*height. */
+{
+	IplImage *cropped = NULL;
+	int x,y;
+	if ((img->width)>width)
+		x=((img->width)-width)/2;
+	else
+	{
+		x=0;
+		width = (img->width);
+	}
+	if ((img->height)>height)
+		y=((img->height)-height)/2;
+	else
+	{
+		y=0;
+		height=(img->height);
+	}
+	
+	
+	cropped = img_crop(img,cvRect(x,y,width,height));
+	
+	return cropped;
+}
 IplImage* getCircledTemplate(const IplImage* img)
 {
 	IplImage* bn_redMask = NULL;
