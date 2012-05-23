@@ -1,0 +1,36 @@
+1o Approccio
+-Dalla foto cerchiata di rosso è stato ricostruito un template privo di cerchiatura usando lo spazio colore RGB.
+-Dalla ricostruzione è stata calcolata, tramite funzione ransac e SIFT, la trasformazione affine che mappa il template su
+di un'immagine delle stesse dimensioni dell'originale (nera con solo rettangolo bianco per la posizione del template).
+-Da questa sono state individuate le coordinate del rettangolo contenente il testo cerchiato.
+PRO: Veloce
+CONTRO: Riesce a rilevare solo i contorni disegnati a pennarello. La penna non viene rilevata. Non rileva piccole porzioni di testo
+cerchiate.
+
+2o Approccio
+-Dalla foto cerchiata di rosso è stato ricostruito un template privo di cerchiatura usando lo spazio colore LAB.
+-Dalla ricostruzione è stata calcolata, tramite funzione ransac e SIFT, la trasformazione affine che mappa il template su
+di un'immagine delle stesse dimensioni dell'originale.
+-Da questa sono state individuate le coordinate del rettangolo contenente il testo cerchiato.
+PRO: Veloce. La penna è rilevata.
+CONTRO: Non rileva piccole porzioni di testo cerchiate.
+
+3o Approccio
+-Si calcola in primis la trasformazione geometrica (tramite SIFT+ransac) e si genera l'immagine nera con il template (immagine con cerchio rosso).
+-Dall'immagine generata si rileva le coordinate del cerchio rosso (LAB) usate per prelevare il testo.
+PRO: Riesce a trovare piccole porzioni di testo.
+CONTRO: Lento. La penna non viene rilevata.
+
+3o Approccio
+-Si calcola in primis la trasformazione geometrica (tramite SIFT+ransac) sulla base del template.
+-Dal template si estrae le coordinate del cerchio rosso (con LAB).
+-Si applica la trasformazione geometrica alle sole coordinate del cerchio rosso per ottenere la zona che contiene il testo.
+PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
+CONTRO: Lento. 
+
+4o Approccio????????????????????????
+-Si calcola in primis la trasformazione geometrica (tramite SIFT+ransac) sulla base di un sotto-template di dimensioni ridotte.
+-Dal template si estrae le coordinate del cerchio rosso (con LAB).
+-Si applica la trasformazione geometrica alle sole coordinate del cerchio rosso per ottenere la zona che contiene il testo.
+PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
+CONTRO: Lento. 

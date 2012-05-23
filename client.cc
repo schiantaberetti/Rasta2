@@ -42,7 +42,6 @@ int main(int argc, char** argv){
 	circledImage=argv[4];
 	getImageDate(circledImage,time);
 	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
-
 	outFileStringBuilder.append(pdfName);
 	outFileStringBuilder.append("_from_page_");
 	outFileStringBuilder.append(argv[2]);
@@ -52,7 +51,6 @@ int main(int argc, char** argv){
 	strcpy(	outFileName, outFileStringBuilder.c_str());
 	parseText(outFileName);
 	extractTextFromPdf(pdfName,outFileName,numberOfPage,numberOfPage,tlx,tly,width,height);
-	
 
 	return 0;
 }
