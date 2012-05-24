@@ -16,7 +16,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
 {
 	IplImage* original_image;
-	IplImage* retrieved_image;
+	IplImage* retrieved_image, *projection;
 	IplImage *cropped_sample = NULL;
 //	IplImage *template;
 	CvMat* transformation_matrix;
@@ -32,12 +32,22 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	
-	cropped_sample = getCentredROI(retrieved_image,CROP_DIM,CROP_DIM);
+	CvPoint offset;
+	cropped_sample = getCentredROI(retrieved_image,CROP_DIM,CROP_DIM,&offset);
+	tl.x=tl.x-offset.x;
+	tl.y=tl.y-offset.y;
+	br.x=br.x-offset.x;
+	br.y=br.y-offset.y;
 	
 	transformation_matrix=getProjection(cropped_sample,original_image);
 	perspectiveTrasformation(transformation_matrix,&br);
 	perspectiveTrasformation(transformation_matrix,&tl);
+	
+	//OLD
 	//projection=getTemplateProjection(retrieved_image,original_image);
+	//getRedAreaCoords(projection,&tl,&br);
+	
+	//VERY OLD
 	//getTemplatePositionFromImage(retrieved_image,original_image,&tl,&br);
 	
 
@@ -58,6 +68,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	*width = br.x - tl.x;
 	*height = br.y - tl.y;
 
+cvReleaseImage(&projection);
 	cvReleaseImage(&cropped_sample);
 	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&original_image);
