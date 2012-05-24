@@ -28,9 +28,9 @@ CONTRO: Lento. La penna non viene rilevata.
 PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
 CONTRO: Lento. 
 
-4o Approccio????????????????????????
+4o Approccio
 -Si calcola in primis la trasformazione geometrica (tramite SIFT+ransac) sulla base di un sotto-template di dimensioni ridotte.
 -Dal template si estrae le coordinate del cerchio rosso (con LAB).
 -Si applica la trasformazione geometrica alle sole coordinate del cerchio rosso per ottenere la zona che contiene il testo.
-PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
-CONTRO: Lento. 
+#PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
+#CONTRO: Lento. 
