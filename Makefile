@@ -30,6 +30,7 @@ clean :
 	rm lib/libfeat.a
 	rm lib/libhead.a
 	rm *.o
+	rm note*
 	rm $(EXECUTABLE)
 
 
