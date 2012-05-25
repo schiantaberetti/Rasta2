@@ -32,6 +32,7 @@ IplImage* pattern_matching(const IplImage* img,const IplImage* pattern);
 IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
 void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br);
 IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset);
+IplImage* cleanUpRedComponent(IplImage* img);
 /* ****************************SAMPLE USAGE************************************
 int main(int argc,char** argv){
 	IplImage* img = NULL;
@@ -108,6 +109,23 @@ IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset
 	offset->y=y;
 	return cropped;
 }
+IplImage* cleanUpRedComponent(IplImage* img)
+{
+	IplImage* bn_redMask = NULL;
+	IplImage* bn_filtered = NULL;
+	IplImage* dst =  cvCreateImage( cvGetSize(img),img->depth,img->nChannels);
+	
+	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES);
+	
+	bn_filtered=get_black_pixels_without_mask(img,bn_redMask);
+	
+	
+	cvReleaseImage(&bn_redMask);
+	cvCvtColor( bn_filtered,dst, CV_GRAY2BGR);
+	cvReleaseImage(&bn_filtered);
+	return dst;
+}
+
 IplImage* getCircledTemplate(const IplImage* img)
 {
 	IplImage* bn_redMask = NULL;
@@ -218,6 +236,7 @@ void bn_reverse(IplImage* img)
 IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask)
 /*Return a gray image computed deleting the red component     */
 {
+	
 	IplImage* filtered=getDarkerPixelsMap(img,120);
 	
 	int i,j;
@@ -242,6 +261,7 @@ IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask
 	}
 	return filtered;
 	
+
 }
 void std_show_image(const IplImage*img,char* name,int width,int height)
 {
