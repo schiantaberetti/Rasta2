@@ -33,55 +33,8 @@ IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
 void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br);
 IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset);
 IplImage* cleanUpRedComponent(IplImage* img);
-/* ****************************SAMPLE USAGE************************************
-int main(int argc,char** argv){
-	IplImage* img = NULL;
-	IplImage* bn_redMask = NULL;
-	IplImage* bn_filtered = NULL;
-	IplImage* bn_pattern = NULL;
-	IplImage* probability_map = NULL;
-	IplImage* pattern= NULL;
-	
-	CvPoint br,tl;
-	
-	img = cvLoadImage(argv[1],3);//acquiring image
+IplImage* remove_mask(const IplImage* img,const IplImage* mask);
 
-	//Begin of the computation section
-	bn_redMask = getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),4,100);//get the gray map of red pixels
-	
-	bn_get_containing_box_coordinates(bn_redMask, &tl,&br);//get the ROI of the red pixels
-	
-	bn_filtered=get_bn_without_red(img);//Obtain the image "cleaned"
-
-	bn_pattern = img_crop(bn_filtered,cvRect(tl.x,tl.y,br.x-tl.x,br.y-tl.y));//Extract the target pattern from the image
-	
-	bn_closure(bn_pattern,1);//Closure to help in reconstruct the pattern
-	
-	pattern=cvCreateImage(cvGetSize(bn_pattern),bn_pattern->depth,3);
-	cvCvtColor( bn_pattern,pattern, CV_GRAY2BGR);//Convert the pattern to BGR in order to make confrontations
-	
-	probability_map=pattern_matching(bn_filtered,bn_pattern);//Get the probability map of pattern matching
-	
-	//Begin of the result showing part
-	cvRectangle(img,                    // the dest image 
-                tl,        // top left point 
-                br,       // bottom right point 
-                cvScalar(0, 255, 0, 0), // the color; blue 
-                10, 8, 0);               // thickness, line type, shift
-    std_show_image(img,"Identified_Region",400,600);
-	std_show_image(pattern,"Pattern_Extracted",400,600);
-	std_show_image(probability_map,"Probability_Map",400,600);
-	cvWaitKey(0);
-
-	//Begin of cleaning stuff
-	cvReleaseImage(&bn_filtered);
-	cvReleaseImage(&img);
-	cvReleaseImage(&bn_redMask);
-	cvReleaseImage(&bn_pattern);
-	cvReleaseImage(&pattern);
-	cvReleaseImage(&probability_map);
-	cvDestroyAllWindows();
-} */
 IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset)
 /*Crop the center of the image of dimension width*height. */
 {
@@ -112,18 +65,32 @@ IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset
 IplImage* cleanUpRedComponent(IplImage* img)
 {
 	IplImage* bn_redMask = NULL;
-	IplImage* bn_filtered = NULL;
-	IplImage* dst =  cvCreateImage( cvGetSize(img),img->depth,img->nChannels);
+	IplImage* bn_image = NULL;
+	IplImage* bn_dark_pixels= NULL;
+	IplImage* dark_pixels= NULL;
+	IplImage* filtered = NULL;
 	
-	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES);
+	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES); //mask of the red pixels
 	
-	bn_filtered=get_black_pixels_without_mask(img,bn_redMask);
+	/*OTSU Thresholding for b/w image*/
+	bn_dark_pixels = cvCreateImage(cvGetSize(img),IPL_DEPTH_8U,1);
+	bn_image = cvCreateImage(cvGetSize(img),IPL_DEPTH_8U,1);
+	cvCvtColor(img,bn_image,CV_BGR2GRAY);
+	cvThreshold(bn_image,bn_dark_pixels,90,255,CV_THRESH_OTSU);
+
+	/*Get back to color image*/
+	dark_pixels = cvCreateImage(cvGetSize(img),img->depth,img->nChannels);
+	cvCvtColor(bn_dark_pixels,dark_pixels,CV_GRAY2BGR);
+	
+	/*Remove the red pixels*/
+	filtered=remove_mask(bn_dark_pixels,bn_redMask);
 	
 	
+	cvReleaseImage(&bn_image);
+	cvReleaseImage(&dark_pixels);
+	cvReleaseImage(&bn_dark_pixels);
 	cvReleaseImage(&bn_redMask);
-	cvCvtColor( bn_filtered,dst, CV_GRAY2BGR);
-	cvReleaseImage(&bn_filtered);
-	return dst;
+	return filtered;
 }
 
 IplImage* getCircledTemplate(const IplImage* img)
@@ -233,10 +200,37 @@ void bn_reverse(IplImage* img)
 			cvSet2D(img,i,j,pixel);
 		}
 }
-IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask)
-/*Return a gray image computed deleting the red component     */
+IplImage* remove_mask(const IplImage* img,const IplImage* mask)
+/*Return the image computed deleting the mask component     */
 {
+	IplImage* filtered=cvCreateImage( cvGetSize(img),img->depth,img->nChannels);
+	cvCopyImage(img,filtered);
 	
+	int i,j;
+	CvScalar pixel;
+	unsigned char *data=((uchar*)filtered->imageData);
+	int step=filtered->widthStep;
+	for(i=0;i<filtered->height;i++)
+	{
+			for(j=0;j<(filtered->width) * (filtered->nChannels);j+=filtered->nChannels)
+			{
+				pixel=cvGet2D(mask,i,j/filtered->nChannels);
+				
+				if(pixel.val[0]>150)
+				{
+					data[j+2]=255;
+					data[j+1]=255;
+					data[j]=255;
+				}
+			}
+		data+=step;
+	}
+	return filtered;
+
+}
+IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask)
+/*Return a gray image computed deleting the mask component     */
+{
 	IplImage* filtered=getDarkerPixelsMap(img,120);
 	
 	int i,j;
