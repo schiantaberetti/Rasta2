@@ -20,6 +20,46 @@
 /* threshold on squared ratio of distances between NN and 2nd NN */
 #define NN_SQ_DIST_RATIO_THR 0.49
 
+
+char* getImageFile(char* dirName,char* fileName){
+/*concatenate the name of the image and the fileName and returns it. If the file isn't in format .jpg
+it returns NULL*/
+	int pathLen,nameLen;
+	nameLen=strlen(fileName);
+	pathLen=strlen(dirName);
+	if(fileName[nameLen-4]!='.' && fileName[nameLen-3]!='j' && fileName[nameLen-2]!='p' && fileName[nameLen-1]!='g'){
+		return NULL;
+	}else{
+		char *name=(char *)malloc((nameLen+pathLen+1)*sizeof(char));
+		strcpy (name,dirName);
+		strcat(name,fileName);
+		return name;
+	}
+}
+
+CvMat* bestFitForTemplate(IplImage* template,char* dirName){
+/*Calculate the best match for template, searching in the directory specified by dirName. It returns
+the affine matrix H calculated wrt the best match.*/
+/*TO BE IMPROVED*/
+	CvMat* tmpMatrix,H;
+	struct dirent *dp;
+	DIR *dir = opendir(dirName);
+	int bestMatch=0;
+	int tmpMatch;
+	char *name=NULL;
+	while ((dp=readdir(dir)) != NULL) {
+		name=getImageFile(dirName,dp->d_name);
+		if(name!=NULL){
+			printf("\n%s ",name);
+			free(name);
+		}		
+	}
+	printf("\nBESTMATCH=%d",bestMatch);
+	closedir(dir);
+	return NULL;
+
+}
+
 void perspectiveTrasformation(const CvMat* H,CvPoint* src)
 /*Map the src point wrt the transformation matrix H*/
 {
