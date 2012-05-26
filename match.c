@@ -43,7 +43,9 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	br.x=br.x-offset.x;
 	br.y=br.y-offset.y;
 	
-	bestFitForTemplate(cropped_sample,DB_PDF_IMG_PATH);
+
+	//JUST FOR TEST
+	//bestFitForTemplate(cropped_sample,DB_PDF_IMG_PATH);
 	//ATTENTION	
 	//If the number of match is not enough the matrix is null
 	transformation_matrix=getProjection(cropped_sample,original_image);
