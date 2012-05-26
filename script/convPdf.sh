@@ -1,2 +1,4 @@
 #!/bin/bash
-convert moduloLM0910.pdf -alpha off modulo.jpg
+echo 'Inserto the name of the file: '
+read filename
+convert $(filename) -alpha off $(filename).jpg

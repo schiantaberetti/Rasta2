@@ -34,3 +34,10 @@ CONTRO: Lento.
 -Si applica la trasformazione geometrica alle sole coordinate del cerchio rosso per ottenere la zona che contiene il testo.
 #PRO: Riesce a trovare piccole porzioni di testo. Funziona anche con la penna.
 #CONTRO: Lento. 
+
+5o Approccio
+-Dal template si estrae le coordinate del cerchio rosso (con LAB).
+-Dall'immagine fotografata si elimina il rosso
+-Si calcola la trasformazione geometrica (tramite SIFT+ransac) sulla base di un sotto-template di dimensioni ridotte.
+-Si applica la trasformazione geometrica alle sole coordinate del cerchio rosso per ottenere la zona che contiene il testo contando anche l'offset.
+
