@@ -1,8 +1,4 @@
-1) Fare delle ottimizzazioni (es usare un subpattern per il calcolo dei SIFT e quindi della traformazione geometrica)
-2) Se faccio una foto con della roba nera intorno (o che non sia il foglio) eliminarlo e tirare fuori il template
-3) Indicizzare i sift per evitare onerosi conti
-4) Implementare la funzione da webcam
-5) Testing con foto di piu' cellulari
+1) Permettere al pdfcreator di fare "l'indicizzazione" dei sift creandoli a pratire dalla directory delle img del pdf
+2) Testing con foto di piu' cellulari
 
-/home/alberto/Desktop/OpenCV-2.2.0/modules/imgproc/src/imgwrap.cpp
-/home/alberto/Desktop/OpenCV-2.2.0/modules/core/src/matmul.cpp
+
