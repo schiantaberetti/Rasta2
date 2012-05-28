@@ -9,6 +9,8 @@
 #include "template_extractor.h"
 #include "sift_template.h"
 #include "match.h"
+#include "database.h"
+#include "sqlite3.h"
 
 #define CROP_DIM	800
 #define DB_PDF_IMG_PATH "database/pdf_img/"
@@ -16,6 +18,14 @@
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
 {
+
+//ADDED DB TESTING
+/*	sqlite3 *db;
+	openDB("sqlite/database_sqlite",&db);	
+	queryDB("SELECT * from papers",&db);
+	closeDB(&db);*/
+//END ADDED
+
 	IplImage* original_image;
 	IplImage* retrieved_image, *projection;
 	IplImage *cropped_sample = NULL;

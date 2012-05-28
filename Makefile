@@ -1,17 +1,18 @@
 POPPLER_LIB = `pkg-config --cflags --libs poppler`
 OPENCV_LIB = `pkg-config --cflags --libs opencv `
-FEAT_LIB = lib/libfeat.a lib/libhead.a
+FEAT_LIB = lib/libfeat.a lib/libhead.a lib/libsqlite.a
 
 EXECUTABLE = pdfextractor
 
-all : libhead libfeat client.cc match.o sqlite3.o
+all : libhead libfeat libsqlite client.cc match.o
 	g++ client.cc -I include -w match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
 match.o : match.c
 	cc -c match.c -I include -w $(OPENCV_LIB) $(FEAT_LIB) 
 
-sqlite3.o: 
-	cc -c sqlite3.c -I include -w  
+libsqlite: 
+	cd libsqlite-src/
+	make -C libsqlite-src
 	
 libfeat : 
 	cd libfeat-src/
@@ -34,6 +35,7 @@ clean :
 	rm jhead-src/*.o
 	rm lib/libfeat.a
 	rm lib/libhead.a
+	rm lib/libsqlite.a
 	rm *.o
 	rm -f note*
 	rm $(EXECUTABLE)
