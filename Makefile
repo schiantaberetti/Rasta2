@@ -4,11 +4,14 @@ FEAT_LIB = lib/libfeat.a lib/libhead.a
 
 EXECUTABLE = pdfextractor
 
-all : libhead libfeat client.cc match.o
+all : libhead libfeat client.cc match.o sqlite3.o
 	g++ client.cc -I include -w match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
 match.o : match.c
 	cc -c match.c -I include -w $(OPENCV_LIB) $(FEAT_LIB) 
+
+sqlite3.o: 
+	cc -c sqlite3.c -I include -w  
 	
 libfeat : 
 	cd libfeat-src/
@@ -24,13 +27,15 @@ install :
 uninstall :
 	rm /usr/bin/pdfextractor 
 
+
+
 clean :
 	rm libfeat-src/*.o
 	rm jhead-src/*.o
 	rm lib/libfeat.a
 	rm lib/libhead.a
 	rm *.o
-	rm note*
+	rm -f note*
 	rm $(EXECUTABLE)
 
 
