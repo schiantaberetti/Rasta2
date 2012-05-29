@@ -11,7 +11,7 @@ EXECUTABLE = pdfextractor
 all : libhead libfeat objs
 	g++ client.cc -I include -w $(OBJS) $(SQLITE_LIB) $(POPPLER_LIB) $(OPENCV_LIB) $(JHEAD_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
-objs:
+objs: libfeat libhead
 	make -C $(SRC_DIR)
 
 libfeat : 
