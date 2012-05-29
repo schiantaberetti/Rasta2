@@ -3,45 +3,6 @@
 #include "opencv/cv.h"
 #include "stdio.h"
 
-//#include "opencv/cv.h"
-//#include "opencv/cxcore.h" 
-#define VIDEO_WIDTH 1024
-#define VIDEO_HEIGHT 600
-#define HSV_HUE_RED 0
-#define HSV_HUE_GREEN 120
-#define HSV_HUE_BLUE 240
-#define HUE_EPS	4
-#define SAT_THRES 100
-#define LAB_A_THRES 140
-#define LAB_B_THRES 100
-
-#define for_each_pixel(pixel,img_ptr) \
-	int i,j; \
-	unsigned char *data=((uchar*)img_ptr->imageData); \
-	int step=img_ptr->widthStep; \
-	for(i=0;i<img_ptr->height;i++) { \
-			for(j=0;j<(img_ptr->width) * (img_ptr->nChannels);j+=img_ptr->nChannels) { \
-				pixel=cvGet2D(mask,i,j/filtered->nChannels); } \
-			data+=step; 
-
-
-
-IplImage* selectHue(const IplImage* elabMask,IplImage* bitMask,int hue,int eps,int sat);
-IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps,int sat);
-void bn_get_containing_box_coordinates(const IplImage* gray_img,CvPoint* topLeft,CvPoint* bottomRight);
-void show_scaled_image_and_stop(const IplImage*img,int width,int height);
-IplImage* get_black_pixels_without_mask(const IplImage* img,const IplImage* mask);
-void bn_reverse(IplImage* img);
-IplImage* getDarkerPixelsMap(const IplImage* img,int threshold);
-void std_show_image(const IplImage* img,char* name ,  int width , int height);
-IplImage* img_crop(IplImage* img,CvRect rect);
-void bn_closure(IplImage* img,int n);
-IplImage* pattern_matching(const IplImage* img,const IplImage* pattern);
-IplImage* getABPixelsMap(const IplImage* img,int a_thres,int b_thres);
-void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br);
-IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset);
-IplImage* cleanUpRedComponent(IplImage* img);
-IplImage* remove_mask(const IplImage* img,const IplImage* mask);
 
 IplImage* getCentredROI(const IplImage *img,int width,int height,CvPoint *offset)
 /*Crop the center of the image of dimension width*height. */
@@ -213,26 +174,22 @@ IplImage* remove_mask(const IplImage* img,const IplImage* mask)
 {
 	IplImage* filtered=cvCreateImage( cvGetSize(img),img->depth,img->nChannels);
 	cvCopyImage(img,filtered);
-	
-	int i,j;
+
 	CvScalar pixel;
-	unsigned char *data=((uchar*)filtered->imageData);
-	int step=filtered->widthStep;
-	for(i=0;i<filtered->height;i++)
-	{
-			for(j=0;j<(filtered->width) * (filtered->nChannels);j+=filtered->nChannels)
-			{
-				pixel=cvGet2D(mask,i,j/filtered->nChannels);
-				
-				if(pixel.val[0]>150)
+	int i,j; 
+	unsigned char *data=((uchar*)filtered->imageData); 
+	int step=filtered->widthStep; 
+	for(i=0;i<filtered->height;i++, 
+		data+=step)  
+		for(j=0;j<(filtered->width) * (filtered->nChannels); 
+			pixel=cvGet2D(mask,i,j/filtered->nChannels),j+=filtered->nChannels) 
+		if(pixel.val[0]>150)
 				{
 					data[j+2]=255;
 					data[j+1]=255;
 					data[j]=255;
 				}
-			}
-		data+=step;
-	}
+
 	return filtered;
 
 }

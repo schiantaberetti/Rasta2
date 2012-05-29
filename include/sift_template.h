@@ -38,9 +38,4 @@ extern void perspectiveTrasformation(const CvMat* H,CvPoint* src);
 extern CvMat* getProjection(IplImage* template,IplImage *image);
 /*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
 
-extern IplImage* getTemplateProjection(IplImage* template,IplImage *image);
-/*It calculate the affine trasfomartion of template over image wrt sift matching.*/
-
-extern void getTemplatePositionFromImage(IplImage* img1,IplImage *img2,CvPoint* topLeft,CvPoint* bottomRight);
-/*calculate the upper left corner and the bottom right corner of the area in img2 that relates to img1.*/
 #endif
