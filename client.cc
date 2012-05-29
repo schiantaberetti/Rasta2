@@ -36,19 +36,15 @@ int main(int argc, char** argv){
 	//the string to build the output file name
 	std::string outFileStringBuilder("note_from_");
 	//TODO 
-	if(argc!=5){
-		printf("Error: usage <pdf> <number_of_page> <pdf_page_img> <circled_pdf_image>\n");
+	if(argc!=2){
+		printf("Error: usage <circled_pdf_image>\n");
 		return 0;
 	}
-	pdfName=argv[1];
-	numberOfPage=atoi(argv[2]);
-	originalImage=argv[3];
-	circledImage=argv[4];
+	circledImage=argv[1];
 	getImageDate(circledImage,time);
 
-//DEBUG
 	pdfName=findPdfFileInDB(circledImage,&tlx,&tly,&width,&height,&numberOfPage);
-//DEBUG
+
 	/*getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);*/
 	outFileStringBuilder.append(pdfName);
 	outFileStringBuilder.append("_from_page_");
