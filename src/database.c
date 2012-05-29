@@ -4,8 +4,6 @@
 
 
 
-
-
 void openDB(char* databaseFile,sqlite3 **db){
 	/*open a db in the sqlite format*/
 	int value;
@@ -36,10 +34,10 @@ void closeDB(sqlite3 **db){
 }
 
 
-int fetchQuery(sqlite3_stmt** stmt){
+int fetchQuery(sqlite3_stmt** stmt,struct DBInfo **dbInfo){
 	// Read the number of rows fetched
 	int cols = sqlite3_column_count(*stmt);
-	int col,value;
+	int length,value;
 	// fetch a row’s status
 	value = sqlite3_step(*stmt);
 
@@ -47,16 +45,17 @@ int fetchQuery(sqlite3_stmt** stmt){
 	// SQLITE_ROW means fetched a row
 
 	// sqlite3_column_text returns a const void* , typecast it to const char*
-		for(col=0 ; col<cols;col++){
-			const char *val = (const char*)sqlite3_column_text(*stmt,col);
-			printf("%s = %s\t",sqlite3_column_name(*stmt,col),val);
-		}
-		printf("\n");
+		(*dbInfo)->paperName=(char*)sqlite3_column_text(*stmt,PAPER_NAME);
+		(*dbInfo)->pageName=(char*)sqlite3_column_text(*stmt,PAGE_NAME);
+		(*dbInfo)->paperPath=(char*)sqlite3_column_text(*stmt,PAPER_PATH);
+		(*dbInfo)->pagePath=(char*)sqlite3_column_text(*stmt,PAGE_PATH);
+		(*dbInfo)->numberOfPage=atoi((const char*)sqlite3_column_text(*stmt,NUMBER_OF_PAGE));
+		
+		
 		return(1);
 	}
 	else if(value == SQLITE_DONE){
 		// All rows finished
-		printf("All rows fetched\n");
 		return(0);
 	}
 	else{

@@ -4,3 +4,15 @@ real	2m1.274s (the elapsed real time between invocation and termination)
 user	1m57.835s (the user CPU time (the sum of the tms_utime and tms_cutime values in a struct tms as returned by times(2)))
 sys	0m3.336s (the system CPU time (the sum of the tms_stime and tms_cstime values in a struct tms as returned by times(2)))
 
+Con 13 immagini trova quella corretta (senza alcuna schermata a video) ricalcolando i sift per template e img ogni volta con tempi pari a:
+
+(img1)
+real	2m13.775s
+user	2m9.680s
+sys	0m3.964s
+
+(img2)
+real	2m4.859s
+user	2m0.748s
+sys	0m3.972s
+

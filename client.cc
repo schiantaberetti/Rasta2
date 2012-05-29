@@ -7,12 +7,16 @@
 */
 
 #include "pdftotext.h"
-//#include <stdlib.h>
-//#include <stdio.h>
 #include <iostream>
+#include <sstream>
 extern "C" { //cplusplus method to import c compiled code.
 #include "match.h" 
 }
+
+
+/////DA MOFICARE
+
+#define PDF_PATH "database/pdf/"
 
 int main(int argc, char** argv){	
 	//variables tha contains the top left corner and the dimension of the red cirle
@@ -41,10 +45,16 @@ int main(int argc, char** argv){
 	originalImage=argv[3];
 	circledImage=argv[4];
 	getImageDate(circledImage,time);
-	getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);
+
+//DEBUG
+	pdfName=findPdfFileInDB(circledImage,&tlx,&tly,&width,&height,&numberOfPage);
+//DEBUG
+	/*getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);*/
 	outFileStringBuilder.append(pdfName);
 	outFileStringBuilder.append("_from_page_");
-	outFileStringBuilder.append(argv[2]);
+	std::ostringstream ss;
+	ss<<numberOfPage;
+	outFileStringBuilder.append(ss.str());
 	outFileStringBuilder.append("_in_date_");
 	outFileStringBuilder.append(time);
 	outFileName = new char [outFileStringBuilder.size()+1];
