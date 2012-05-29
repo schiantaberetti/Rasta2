@@ -17,6 +17,16 @@
 #define LAB_A_THRES 140
 #define LAB_B_THRES 100
 
+#define for_each_pixel(pixel,img_ptr) \
+	int i,j; \
+	unsigned char *data=((uchar*)img_ptr->imageData); \
+	int step=img_ptr->widthStep; \
+	for(i=0;i<img_ptr->height;i++) { \
+			for(j=0;j<(img_ptr->width) * (img_ptr->nChannels);j+=img_ptr->nChannels) { \
+				pixel=cvGet2D(mask,i,j/filtered->nChannels); } \
+			data+=step; 
+
+
 
 IplImage* selectHue(const IplImage* elabMask,IplImage* bitMask,int hue,int eps,int sat);
 IplImage* getHuePixelsMap(const IplImage* img,int hue,CvSize output_size,int eps,int sat);
