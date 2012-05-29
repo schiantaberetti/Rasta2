@@ -21,8 +21,10 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 
 //ADDED DB TESTING
 /*	sqlite3 *db;
+	sqlite3_stmt* stmt;
 	openDB("sqlite/database_sqlite",&db);	
-	queryDB("SELECT * from papers",&db);
+	queryDB("SELECT * from papers",&stmt,&db);
+	while(fetchQuery(&stmt)){}
 	closeDB(&db);*/
 //END ADDED
 

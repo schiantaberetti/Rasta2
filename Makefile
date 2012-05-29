@@ -19,8 +19,8 @@ libfeat :
 	make -C libfeat-src
 
 libhead:
-	cd jhead-src
-	make -C jhead-src/
+	cd libjhead-src
+	make -C libjhead-src/
 
 install :
 	mv pdfextractor /usr/bin
