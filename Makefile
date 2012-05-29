@@ -32,7 +32,8 @@ uninstall :
 
 clean :
 	rm libfeat-src/*.o
-	rm jhead-src/*.o
+	rm libsqlite-src/*.o
+	rm libjhead-src/*.o
 	rm lib/libfeat.a
 	rm lib/libhead.a
 	rm lib/libsqlite.a
