@@ -12,21 +12,9 @@
 #include "database.h"
 #include "sqlite3.h"
 
-#define CROP_DIM	800
-#define DB_PDF_IMG_PATH "database/pdf_img/"
-
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
 {
-
-//ADDED DB TESTING
-/*	sqlite3 *db;
-	sqlite3_stmt* stmt;
-	openDB("sqlite/database_sqlite",&db);	
-	queryDB("SELECT * from papers",&stmt,&db);
-	while(fetchQuery(&stmt)){}
-	closeDB(&db);*/
-//END ADDED
 
 	IplImage* original_image;
 	IplImage* retrieved_image, *projection;
@@ -52,22 +40,11 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	br.x=br.x-offset.x;
 	br.y=br.y-offset.y;
 	
-
-	//JUST FOR TEST
-	//bestFitForTemplate(cropped_sample,DB_PDF_IMG_PATH);
 	//ATTENTION	
 	//If the number of match is not enough the matrix is null
 	transformation_matrix=getProjection(cropped_sample,original_image);
 	perspectiveTrasformation(transformation_matrix,&br);
 	perspectiveTrasformation(transformation_matrix,&tl);
-	
-	//OLD
-	//projection=getTemplateProjection(retrieved_image,original_image);
-	//getRedAreaCoords(projection,&tl,&br);
-	
-	//VERY OLD
-	//getTemplatePositionFromImage(retrieved_image,original_image,&tl,&br);
-	
 
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
