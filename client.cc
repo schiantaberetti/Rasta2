@@ -13,11 +13,6 @@ extern "C" { //cplusplus method to import c compiled code.
 #include "match.h" 
 }
 
-
-/////DA MOFICARE
-
-#define PDF_PATH "database/pdf/"
-
 int main(int argc, char** argv){	
 	//variables tha contains the top left corner and the dimension of the red cirle
 	int tlx,tly,width,height;
