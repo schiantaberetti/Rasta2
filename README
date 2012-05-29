@@ -3,7 +3,7 @@ Rasta2 is a program
 Dependencies:
 In order to compile and use Rasta2 you will need the following libraries:
 * opencv 
-* poppler
+* poppler <= 0.18.4
 
 *********to compile************
 make

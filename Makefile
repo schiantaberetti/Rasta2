@@ -1,25 +1,23 @@
 POPPLER_LIB = `pkg-config --cflags --libs poppler`
 OPENCV_LIB = `pkg-config --cflags --libs opencv `
-FEAT_LIB = lib/libfeat.a lib/libhead.a lib/libsqlite.a
+SQLITE_LIB = `pkg-config --cflags --libs sqlite3 `
+SRC_DIR = src
+FEAT_LIB = lib/libfeat.a 
+JHEAD_LIB = lib/libhead.a
 
+OBJS= $(SRC_DIR)/match.o $(SRC_DIR)/pdftotext.o $(SRC_DIR)/sift_template.o $(SRC_DIR)/template_extractor.o $(SRC_DIR)/database.o
 EXECUTABLE = pdfextractor
 
-all : libhead libfeat libsqlite client.cc match.o
-	g++ client.cc -I include -w match.o $(POPPLER_LIB) $(OPENCV_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
+all : libhead libfeat objs
+	g++ client.cc -I include -w $(OBJS) $(SQLITE_LIB) $(POPPLER_LIB) $(OPENCV_LIB) $(JHEAD_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
-match.o : match.c
-	cc -c match.c -I include -w $(OPENCV_LIB) $(FEAT_LIB) 
+objs:
+	make -C $(SRC_DIR)
 
-libsqlite: 
-	cd libsqlite-src/
-	make -C libsqlite-src
-	
 libfeat : 
-	cd libfeat-src/
 	make -C libfeat-src
 
 libhead:
-	cd libjhead-src
 	make -C libjhead-src/
 
 install :
@@ -32,17 +30,11 @@ uninstall :
 
 clean :
 	rm libfeat-src/*.o
-	rm libsqlite-src/*.o
 	rm libjhead-src/*.o
 	rm lib/libfeat.a
 	rm lib/libhead.a
-	rm lib/libsqlite.a
-	rm *.o
 	rm -f note*
 	rm $(EXECUTABLE)
+	make -C $(SRC_DIR)/ clean
 
-
-##PER UBUNTU VA AGGIUNTO IL LINK SIMBOLICO A libm-2.13.so in /lib/libm.so.6
-##PER UBUNTU 11.10 L'OPZIONE DI COMPILAZIONE DEL MAIN DI MATCH e':	cc -I include `pkg-config --cflags --libs opencv `  match.c -o match.o -L lib -lfeat `pkg-config --libs opencv ` 
-##PER UBUNTU 10.04 e' 	cc -I include `pkg-config --cflags --libs opencv `  match.c  /usr/lib/libopenjpeg.so /lib/libm.so.6 lib/libfeat.a -o match.o 
 

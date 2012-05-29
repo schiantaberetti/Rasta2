@@ -88,7 +88,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	*tly = tl.y;
 	*width = br.x - tl.x;
 	*height = br.y - tl.y;
-	printf("\nOKI");
+
 	cvReleaseImage(&cleaned_image);
 	//cvReleaseImage(&projection);
 	cvReleaseImage(&cropped_sample);
