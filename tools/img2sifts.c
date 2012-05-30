@@ -20,7 +20,7 @@
 #include "utils.h"
 
 #include <highgui.h>
-
+#include <cv.h>
 #include <unistd.h>
 
 #define OPTIONS ":o:m:i:s:c:r:n:b:dxh"
