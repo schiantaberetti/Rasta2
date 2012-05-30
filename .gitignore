@@ -7,4 +7,6 @@
 *.o
 *.so
 *.a
+*.~
+img2sifts
 pdfextractor
