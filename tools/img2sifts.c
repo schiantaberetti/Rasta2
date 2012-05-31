@@ -18,6 +18,7 @@
 #include "sift.h"
 #include "imgfeatures.h"
 #include "utils.h"
+#include "cv.h"
 
 #include <highgui.h>
 
