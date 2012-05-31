@@ -39,7 +39,7 @@ int main(int argc, char** argv){
 	getImageDate(circledImage,time);
 
 	pdfName=findPdfFileInDB(circledImage,&tlx,&tly,&width,&height,&numberOfPage);
-
+	numberOfPage++; //needed to compensate the notation of imagemagick
 	/*getTextCircledPosition( originalImage,circledImage, &tlx,&tly,&width,&height);*/
 	outFileStringBuilder.append(pdfName);
 	outFileStringBuilder.append("_from_page_");
