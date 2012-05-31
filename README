@@ -7,3 +7,8 @@ In order to compile and use Rasta2 you will need the following libraries:
 
 *********to compile************
 make
+
+*********To create the DB******
+place your pdf in the database/pdf directory and type:
+cd script
+./createDB.sh
