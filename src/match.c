@@ -12,6 +12,7 @@
 #include "sift.h"
 #include "database.h"
 #include "sqlite3.h"
+#include <stdio.h>
 
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
@@ -81,7 +82,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 {
 
 	//BRUTTURA
-	char* tmpFileName="temp.sift";
+	char* tmpSiftTemplateFile="temp.sift";
 	struct feature* feat_template=NULL,*tmp_feat=NULL;
 
 	CvMat* transformation_matrix,*tmpMatrix=NULL;
@@ -121,7 +122,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	//BRUTTURA
 	printf("\nCalcolo i sift del template e li salvo su file");
 	nFeat=sift_features( cropped_sample, &feat_template );
-	export_features( tmpFileName, feat_template, nFeat );
+	export_features( tmpSiftTemplateFile, feat_template, nFeat );
 	free(feat_template);
 
 	while(fetchQuery(&stmt,&dbInfo)){
@@ -145,7 +146,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 		//tmpMatrix=getProjectionAndMatchFeatures(feat_template,nFeat,nameOfSift,&tmpMatch);
 
 		//BRUTTURA
-		tmpMatrix=getProjectionAndMatchText(tmpFileName,nameOfSift,&tmpMatch);
+		tmpMatrix=getProjectionAndMatchText(tmpSiftTemplateFile,nameOfSift,&tmpMatch);
 
 		printf("\nMatch trovati con %s: %d\n",dbInfo->pageName,tmpMatch);
 		if(tmpMatch>bestMatch){
@@ -204,6 +205,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	free(dbInfo);
 	closeDB(&db);
 	cvDestroyAllWindows();
+
+	if(remove(tmpSiftTemplateFile)== -1 )
+		printf( "\nErrore nella cancellazione del file" );
 	
 	return outputName;
 }
