@@ -4,6 +4,7 @@ Dependencies:
 In order to compile and use Rasta2 you will need the following libraries:
 * opencv 
 * poppler <= 0.18.4
+* sqlite3
 
 *********to compile************
 make
