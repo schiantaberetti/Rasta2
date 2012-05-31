@@ -9,6 +9,7 @@
 #include "template_extractor.h"
 #include "sift_template.h"
 #include "match.h"
+#include "sift.h"
 #include "database.h"
 #include "sqlite3.h"
 
@@ -79,7 +80,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
  * set the coords and dimensions wrt the red circled area in the test_image.*/
 {
 
-	struct feature* feat_template=NULL;
+	//BRUTTURA
+	char* tmpFileName="temp.sift";
+	struct feature* feat_template=NULL,*tmp_feat=NULL;
 
 	CvMat* transformation_matrix,*tmpMatrix=NULL;
 	IplImage* retrieved_image, *projection=NULL;
@@ -87,7 +90,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	IplImage *cleaned_image = NULL;
 	int bestMatch=0,tmpMatch,nFeat;
 	CvPoint br,tl; //Position of the template in the image
- 	char* nameOfImage,*outputName=NULL;
+ 	char* nameOfImage,*nameOfSift,*outputName=NULL;
 	//DEBUG
 	char* nameSrcImage=NULL;
 	IplImage *srcImage = NULL;
@@ -96,10 +99,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	sqlite3_stmt* stmt;
 	struct DBInfo *dbInfo;
 	dbInfo=(struct DBinfo *)malloc(sizeof(struct DBInfo));
-	char* query="SELECT distinct p1.name,p2.name,p1.path,p2.path,p2.number_of_page from papers p1,pages p2 where p1.id_paper=p2.id_paper";
+	char* query="SELECT distinct p1.name,p2.name,p1.path,p2.path,p2.number_of_page,p3.name,p3.path from papers p1,pages p2 ,sifts p3 where p1.id_paper=p2.id_paper and p3.id_pages=p2.id_pages";
 	openDB(DB_PATH,&db);	
 	queryDB(query,&stmt,&db);
-
   
   	retrieved_image = cvLoadImage( test_image, 1 );
   
@@ -107,7 +109,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	cleaned_image=cleanUpRedComponent(retrieved_image);
-	show_scaled_image_and_stop(cleaned_image,800,600);
+	//show_scaled_image_and_stop(cleaned_image,800,600);
 	
 	CvPoint offset;
 	cropped_sample = getCentredROI(cleaned_image,CROP_DIM,CROP_DIM,&offset);
@@ -116,23 +118,36 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	br.x=br.x-offset.x;
 	br.y=br.y-offset.y;
 	
-	//nFeat=sift_features( cropped_sample, &feat_template );
-
+	//BRUTTURA
+	printf("\nCalcolo i sift del template e li salvo su file");
+	nFeat=sift_features( cropped_sample, &feat_template );
+	export_features( tmpFileName, feat_template, nFeat );
+	free(feat_template);
 
 	while(fetchQuery(&stmt,&dbInfo)){
 		nameOfImage=(char*)malloc(sizeof(char)*(strlen(dbInfo->pageName)+strlen(dbInfo->pagePath)+1));
 		strcpy(nameOfImage,dbInfo->pagePath);
 		strcat(nameOfImage,dbInfo->pageName);
+
+
+		nameOfSift=(char*)malloc(sizeof(char)*(strlen(dbInfo->siftName)+strlen(dbInfo->siftPath)+1));
+		strcpy(nameOfSift,dbInfo->siftPath);
+		strcat(nameOfSift,dbInfo->siftName);
+
 		//ATTENTION	
 		//If the number of match is not enough the matrix is null
-
 		//VERSION THAT CALCULATE SIFT FOR IMAGE & TEMPLATE
-		tmpMatrix=getProjectionAndMatch(cropped_sample,nameOfImage,&tmpMatch);
+		//tmpMatrix=getProjectionAndMatch(cropped_sample,nameOfImage,&tmpMatch);
+		//tmp_feat=clone_feature(feat_template);
 
-		//VERSION THAT CALCULATE SIFT FOR ONLY IMAGE (TODO CORRECT IT)
-		//getProjectionAndMatchFeatures(feat_template,nFeat,nameOfImage,&tmpMatch);
+		//VERSION THAT CALCULATE SIFT FOR ONLY IMAGE (IT WORKS CORRECT )
+		//nFeat=sift_features( cropped_sample, &feat_template );		
+		//tmpMatrix=getProjectionAndMatchFeatures(feat_template,nFeat,nameOfSift,&tmpMatch);
 
-		printf("Match trovati con %s: %d\n",dbInfo->pageName,tmpMatch);
+		//BRUTTURA
+		tmpMatrix=getProjectionAndMatchText(tmpFileName,nameOfSift,&tmpMatch);
+
+		printf("\nMatch trovati con %s: %d\n",dbInfo->pageName,tmpMatch);
 		if(tmpMatch>bestMatch){
 			bestMatch=tmpMatch;			
 			if(tmpMatrix!=NULL) transformation_matrix=cvCloneMat(tmpMatrix);
@@ -183,7 +198,8 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	if(srcImage!=NULL) cvReleaseImage(&srcImage);
 	//DEBUG
 	if(tmpMatrix!=NULL) cvReleaseMat(&transformation_matrix);
-	if(feat_template!=NULL) free(feat_template);
+	//if(feat_template!=NULL) free(feat_template);
+	if(tmp_feat!=NULL) free(feat_template);
 	cvReleaseImage(&retrieved_image);
 	free(dbInfo);
 	closeDB(&db);

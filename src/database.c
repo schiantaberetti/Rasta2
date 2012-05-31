@@ -49,6 +49,8 @@ int fetchQuery(sqlite3_stmt** stmt,struct DBInfo **dbInfo){
 		(*dbInfo)->pageName=(char*)sqlite3_column_text(*stmt,PAGE_NAME);
 		(*dbInfo)->paperPath=(char*)sqlite3_column_text(*stmt,PAPER_PATH);
 		(*dbInfo)->pagePath=(char*)sqlite3_column_text(*stmt,PAGE_PATH);
+		(*dbInfo)->siftPath=(char*)sqlite3_column_text(*stmt,SIFT_PATH);
+		(*dbInfo)->siftName=(char*)sqlite3_column_text(*stmt,SIFT_NAME);
 		(*dbInfo)->numberOfPage=atoi((const char*)sqlite3_column_text(*stmt,NUMBER_OF_PAGE));
 		
 		

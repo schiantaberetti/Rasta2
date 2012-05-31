@@ -20,20 +20,26 @@
 /* threshold on squared ratio of distances between NN and 2nd NN */
 #define NN_SQ_DIST_RATIO_THR 0.49
 
-CvMat* getProjectionAndMatchFeatures(struct feature* feat_template,int n1,char* imageName,int* numberOfMatch){
+
+
+//BRUTTURA
+CvMat* getProjectionAndMatchText(char* templateSiftName,char* siftName,int* numberOfMatch){
 /*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
-  IplImage * image;
-  struct feature* feat_image, * feat;
+  //IplImage * image;
+  struct feature* feat_image, *feat_template,* feat;
   struct feature** nbrs;
   struct kd_node* kd_root;
   CvPoint pt1, pt2;
   double d0, d1;
-  int n2, k, i, m = 0;
+  int n2,n1, k, i, m = 0;
 
-  image=cvLoadImage(imageName,1);
-  printf("Cerco features nell'immagine\n");
-  n2 = sift_features( image, &feat_image );// extract feature from image img2
+  //image=cvLoadImage(imageName,1);
+  printf("\nCarico features dell'immagine");
+  //n2 = sift_features( image, &feat_image );// extract feature from image img2
+  n2=import_features( siftName,FEATURE_LOWE, &feat_image );
+  n1=import_features( templateSiftName,FEATURE_LOWE, &feat_template );
   kd_root = kdtree_build( feat_image, n2 ); //create a kdtree (i.e. a multiscale analysis of image img2)
+
   for( i = 0; i < n1; i++ )
     {
       feat = feat_template + i;
@@ -60,7 +66,63 @@ CvMat* getProjectionAndMatchFeatures(struct feature* feat_template,int n1,char* 
 
   kdtree_release( kd_root );
   free( feat_image );
-  cvReleaseImage(&image);
+  free(feat_template);
+  //cvReleaseImage(&image);
+  return H;
+
+}
+
+
+
+
+
+
+
+
+CvMat* getProjectionAndMatchFeatures(struct feature* feat_template,int n1,char* siftName,int* numberOfMatch){
+/*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
+  //IplImage * image;
+  struct feature* feat_image, * feat;
+  struct feature** nbrs;
+  struct kd_node* kd_root;
+  CvPoint pt1, pt2;
+  double d0, d1;
+  int n2, k, i, m = 0;
+
+  //image=cvLoadImage(imageName,1);
+  printf("\nCarico features dell'immagine");
+  //n2 = sift_features( image, &feat_image );// extract feature from image img2
+  n2=import_features( siftName,FEATURE_LOWE, &feat_image );
+  kd_root = kdtree_build( feat_image, n2 ); //create a kdtree (i.e. a multiscale analysis of image img2)
+
+  for( i = 0; i < n1; i++ )
+    {
+      feat = feat_template + i;
+      k = kdtree_bbf_knn( kd_root, feat, 2, &nbrs, KDTREE_BBF_MAX_NN_CHKS ); // finds an image feat'approximate k nearest neighbors in a kd tree using best bin first search.
+      if( k == 2 )
+	{
+	  d0 = descr_dist_sq( feat, nbrs[0] );//calculate distance between feature and a nearest sift calculate previously
+	  d1 = descr_dist_sq( feat, nbrs[1] );// calculate the other
+	  if( d0 < d1 * NN_SQ_DIST_RATIO_THR )
+	    {
+	      m++;
+	      feat_template[i].fwd_match = nbrs[0];
+	    }
+	}
+      free( nbrs );
+    }
+
+	*numberOfMatch=m;
+
+
+    CvMat* H;
+    H = ransac_xform( feat_template, n1, FEATURE_FWD_MATCH, lsq_homog, 4, 0.01,
+		      homog_xfer_err, 3.0, NULL, NULL ); //calculate the geometric transformate with respect to sift
+
+  kdtree_release( kd_root );
+  free( feat_image );
+  //free(feat_template);
+  //cvReleaseImage(&image);
   return H;
 
 }

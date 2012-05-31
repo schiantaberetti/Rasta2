@@ -29,7 +29,9 @@ extern void perspectiveTrasformation(const CvMat* H,CvPoint* src);
 extern CvMat* getProjection(IplImage* template,IplImage *image);
 /*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
 
-extern CvMat* getProjectionAndMatchFeatures(struct feature* feat_template,int n2,char* imageName,int* numberOfMatch);
+extern CvMat* getProjectionAndMatchFeatures(struct feature* feat_template,int n1,char* siftName,int* numberOfMatch);
 /*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
 
+extern CvMat* getProjectionAndMatchText(char* templateSiftName,char* siftName,int* numberOfMatch);
+/*It calculate the affine trasfomartion of template over image wrt sift matching and returns the transformation matrix.*/
 #endif

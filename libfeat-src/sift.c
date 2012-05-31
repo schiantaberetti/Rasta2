@@ -53,7 +53,7 @@ static void smooth_ori_hist( double*, int );
 static double dominant_ori( double*, int );
 static void add_good_ori_features( CvSeq*, double*, int, double,
 				   struct feature* );
-static struct feature* clone_feature( struct feature* );
+//static struct feature* clone_feature( struct feature* );
 static void compute_descriptors( CvSeq*, IplImage***, int, int );
 static double*** descr_hist( IplImage*, int, int, double, double, int, int );
 static void interp_hist_entry( double***, double, double, double, double, int,
@@ -987,7 +987,7 @@ static void add_good_ori_features( CvSeq* features, double* hist, int n,
 
   @return Returns a deep copy of feat
 */
-static struct feature* clone_feature( struct feature* feat )
+struct feature* clone_feature( struct feature* feat )
 {
   struct feature* new_feat;
   struct detection_data* ddata;

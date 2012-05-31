@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include "sqlite3.h"
 
-#define DB_PATH "/database/database.db"
+#define DB_PATH "database/database.db"
 #define PAPER_NAME 0
 #define PAGE_NAME 1
 #define PAPER_PATH 2
 #define PAGE_PATH 3
 #define NUMBER_OF_PAGE 4
+#define SIFT_NAME 5
+#define SIFT_PATH 6
 
 struct DBInfo{
 //Info from db
@@ -18,6 +20,8 @@ struct DBInfo{
         char* pageName;
 	char* paperPath;
 	char* pagePath;
+	char* siftPath;
+	char* siftName;
         int numberOfPage;
 };
 

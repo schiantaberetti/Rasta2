@@ -430,13 +430,19 @@ static int import_lowe_features( char* filename, struct feature** features )
   for( i = 0; i < n; i++ )
     {
       /* read affine region parameters */
-      if( fscanf( file, " %lf %lf %lf %lf ", &y, &x, &s, &o ) != 4 )
+	fscanf( file, "%lf", &y);
+	fscanf( file, "%lf", &x);
+	fscanf( file, "%lf",&s);
+	fscanf( file, "%lf", &o ); 
+      /*if( fscanf( file, " %f %f %f %f ", &y, &x, &s, &o ) != 4 )
 	{
+	
 	  fprintf( stderr, "Warning: error reading feature #%d, %s, line %d\n",
 		   i+1, __FILE__, __LINE__ );
 	  free( f );
+		exit(0);
 	  return -1;
-	}
+	}*/
       f[i].img_pt.x = f[i].x = x;
       f[i].img_pt.y = f[i].y = y;
       f[i].scl = s;

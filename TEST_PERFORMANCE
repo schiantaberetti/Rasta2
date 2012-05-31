@@ -16,3 +16,19 @@ real	2m4.859s
 user	2m0.748s
 sys	0m3.972s
 
+
+Con 33 img e sbaglia
+
+real	3m36.871s
+user	3m27.017s
+sys	0m7.116s
+
+Con 33 img e sbaglia (caricando i sift da file)
+real	1m0.929s
+user	0m58.844s
+sys	0m0.612s
+
+real	1m1.459s
+user	0m59.432s
+sys	0m0.652s
+
