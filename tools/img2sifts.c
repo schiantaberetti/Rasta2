@@ -54,10 +54,18 @@ int main( int argc, char** argv )
   struct feature* features;
   int n = 0;
 
-  arg_parse( argc, argv );
-
+  //arg_parse( argc, argv );
+  if(argc<3){
+	  printf("USAGE:\n%s image_file out_file\n",argv[0]);
+	  exit( 1);
+  }
+	img_file_name=argv[1];
+	out_file_name=argv[2];
+	
   fprintf( stderr, "Finding SIFT features...\n" );
+  
   img = cvLoadImage( img_file_name, 1 );
+
   if( ! img )
     fatal_error( "unable to load image from %s", img_file_name );
   n = _sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
@@ -67,9 +75,6 @@ int main( int argc, char** argv )
   if( display )
     {
       draw_features( img, features, n );
-      
-      cvNamedWindow("viewSift", CV_WINDOW_AUTOSIZE);
-      cvShowImage("viewSift",img);
       //display_big_img( img, img_file_name );
       cvWaitKey( 0 );
     }
@@ -129,8 +134,9 @@ static void usage( char* name )
 static void arg_parse( int argc, char** argv )
 {
   //extract program name from command line (remove path, if present)
-  pname = basename( (char*) argv[0] );
+  pname = basename( argv[0] );
 
+	//printf("%s",pname);
   //parse commandline options
   while( 1 )
     {
@@ -160,7 +166,8 @@ static void arg_parse( int argc, char** argv )
 	  if( ! optarg )
 	    fatal_error( "error parsing arguments at -%c\n"	\
 			 "Try '%s -h' for help.", arg, pname );
-	  out_img_name = optarg;
+	  //out_img_name = optarg;
+	   img_file_name = optarg;
 	  break;
 	  
 	  // read intervals
