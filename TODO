@@ -1,5 +1,5 @@
-1) Permettere al pdfcreator di fare "l'indicizzazione" dei sift creandoli a pratire dalla directory delle img del pdf
-2) Necessario un database per lavorare meglio
+1) Capire perché la show_and_stop_image manda in bomba la lettura da file
+2) Capire perché da segm fault quando si tenta di clonare una struttura feature
 3) Testing con foto di piu' cellulari
 
 
