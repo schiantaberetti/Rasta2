@@ -8,5 +8,5 @@
 *.so
 *.a
 *.~
-img2sifts
+tools/img2sifts
 pdfextractor
