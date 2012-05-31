@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "sqlite3.h"
 
-#define DB_PATH "sqlite-database/database_sqlite"
+#define DB_PATH "/database/database.db"
 #define PAPER_NAME 0
 #define PAGE_NAME 1
 #define PAPER_PATH 2
