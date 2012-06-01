@@ -1,4 +1,12 @@
 #!/bin/bash
+DB_DIR="`readlink -f "../database"`"
+EXT="jpg"
+SQLITE_DB="database.db"
+SIFT_CMD="../tools/img2sifts"
+JOBS=0
+CONCURRENCY=7
+
+
 function fatal_error() {
 	if [ $# -gt 0 ]; then
 		echo $1
@@ -16,15 +24,28 @@ function print_status() {
 		fi
 	fi
 }
-function process_pdf() {
-
-
-
+function sqlite3_query(){
+	sql_db=$1
+	query=$2
+	while ! sqlite3 "$1" "$2" >/dev/null 2>/dev/null ; do
+    	sleep 1
+	done
 }
-DB_DIR="`readlink -f "../database"`"
-EXT="jpg"
-SQLITE_DB="database.db"
-SIFT_CMD="../tools/img2sifts"
+function extract_sift_job() {
+	while [ $JOBS -ge $CONCURRENCY ]; do sleep 1; done;
+	let JOBS=JOBS+1
+	
+	image_l=$1 # INPUT
+	id_pages_l=$2 # INPUT
+	
+	sift_file_name="`echo $image | cut -d '.' -f 1`.sift"
+	sift_file_name="`readlink -f $DB_DIR/sift/`/$sift_file_name"
+
+	$SIFT_CMD `readlink -f "$DB_DIR/pdf_img/$image_l"` $sift_file_name
+	sqlite3_query "$DB_DIR/$SQLITE_DB" "INSERT INTO sifts (name,path,id_pages) VALUES ('`echo $image_l | cut -d '.' -f 1`.sift','$DB_DIR/sift/','$id_pages_l')";
+	let JOBS=JOBS-1
+}
+
 if [ $# -gt 0 ]; then
 	DB_DIR=`readlink $1`
 fi
@@ -77,7 +98,7 @@ id_paper=1;
 id_pages=1;
 for pdf_file in `ls -1 $DB_DIR/pdf/*.pdf | sed 's#.*/##' `; do
 	print_status "Processing: $pdf_file" DEBUG;
-	sqlite3 "$DB_DIR/$SQLITE_DB" "INSERT INTO papers (id_paper,name,path) VALUES ('$id_paper','$pdf_file','$DB_DIR/pdf/')";
+	sqlite3_query "$DB_DIR/$SQLITE_DB" "INSERT INTO papers (id_paper,name,path) VALUES ('$id_paper','$pdf_file','$DB_DIR/pdf/')";
 	
 	convert "$DB_DIR/pdf/$pdf_file" -alpha off "$DB_DIR/pdf_img/`echo $pdf_file | cut -d '.' -f 1`.$EXT"
 	
@@ -87,13 +108,9 @@ for pdf_file in `ls -1 $DB_DIR/pdf/*.pdf | sed 's#.*/##' `; do
 		print_status "Extracting SIFT from: $image" DEBUG;
 		num_page=`echo $image | sed 's/[^0-9]*//' | cut -d '.' -f 1`
 		
-		sqlite3 "$DB_DIR/$SQLITE_DB" "INSERT INTO pages (number_of_page,id_paper,path, name, id_pages) VALUES ('$num_page','$id_paper','$DB_DIR/pdf_img/','$image','$id_pages')";
+		sqlite3_query "$DB_DIR/$SQLITE_DB" "INSERT INTO pages (number_of_page,id_paper,path, name, id_pages) VALUES ('$num_page','$id_paper','$DB_DIR/pdf_img/','$image','$id_pages')";
 
-		sift_file_name="`echo $image | cut -d '.' -f 1`.sift"
-		sift_file_name="`readlink -f $DB_DIR/sift/`/$sift_file_name"
-
-		$SIFT_CMD `readlink -f "$DB_DIR/pdf_img/$image"` $sift_file_name
-		sqlite3 "$DB_DIR/$SQLITE_DB" "INSERT INTO sifts (name,path,id_pages) VALUES ('`echo $image | cut -d '.' -f 1`.sift','$DB_DIR/sift/','$id_pages')";
+		extract_sift_job $image $id_pages & 		
 		
 		let id_pages=id_pages+1
 	done
