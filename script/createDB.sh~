@@ -40,6 +40,14 @@ fi
 type convert >/dev/null 2>&1 || fatal_error "Can't find the convert program. You should install ImageMagick."
 type sqlite3 >/dev/null 2>&1 || fatal_error "Can't find the sqlite3 program. You should install sqlite3."
 
+# DELETE OLD FILES
+if [ -d $DB_DIR/pdf_img ];then
+	rm -R $DB_DIR/pdf_img
+fi
+if [ -d $DB_DIR/sift ];then
+	rm -R $DB_DIR/sift
+fi
+
 # INITIALIZE SQULITE3 DB
 print_status "Reinitializing SQLITE DB." DEBUG
 if [ -f "$DB_DIR/$SQLITE_DB" ];then

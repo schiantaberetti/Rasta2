@@ -16,7 +16,11 @@ function print_status() {
 		fi
 	fi
 }
+function process_pdf() {
 
+
+
+}
 DB_DIR="`readlink -f "../database"`"
 EXT="jpg"
 SQLITE_DB="database.db"
