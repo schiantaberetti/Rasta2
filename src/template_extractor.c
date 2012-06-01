@@ -46,7 +46,7 @@ IplImage* cleanUpRedComponent(IplImage* img)
 	bn_image = cvCreateImage(cvGetSize(img),IPL_DEPTH_8U,1);
 	cvCvtColor(img,bn_image,CV_BGR2GRAY);
 	cvThreshold(bn_image,bn_dark_pixels,90,255,CV_THRESH_OTSU);
-
+	
 	/*Get back to color image*/
 	dark_pixels = cvCreateImage(cvGetSize(img),img->depth,img->nChannels);
 	cvCvtColor(bn_dark_pixels,dark_pixels,CV_GRAY2BGR);
@@ -98,7 +98,7 @@ void getRedAreaCoords(const IplImage* img,CvPoint *tl,CvPoint *br)
 
 	bn_redMask = getABPixelsMap(img,LAB_A_THRES,LAB_B_THRES);//getHuePixelsMap(img,HSV_HUE_RED,cvGetSize(img),HUE_EPS,SAT_THRES);//get the gray map of red pixels
 
-	//show_scaled_image_and_stop(bn_redMask,600,400);
+	show_scaled_image_and_stop(bn_redMask,600,400);
 	bn_get_containing_box_coordinates(bn_redMask, tl,br);//get the ROI of the red pixels
 	
 	

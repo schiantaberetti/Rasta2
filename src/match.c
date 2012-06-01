@@ -110,7 +110,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	printf("\nTop Left corner: x=%d y=%d\n",tl.x,tl.y);
 	printf("Bottom Right corner: x=%d y=%d\n",br.x,br.y);
 	cleaned_image=cleanUpRedComponent(retrieved_image);
-	//show_scaled_image_and_stop(cleaned_image,800,600);
+	show_scaled_image_and_stop(cleaned_image,800,600);
 	
 	CvPoint offset;
 	cropped_sample = getCentredROI(cleaned_image,CROP_DIM,CROP_DIM,&offset);
