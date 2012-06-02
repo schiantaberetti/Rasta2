@@ -13,3 +13,6 @@ make
 place your pdf in the database/pdf directory and type:
 cd script
 ./createDB.sh
+
+If your computer have lots of cpu, otherwise
+./createDB_unparallelized.sh

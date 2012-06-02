@@ -4,7 +4,7 @@ EXT="jpg"
 SQLITE_DB="database.db"
 SIFT_CMD="../tools/img2sifts"
 JOBS=0
-CONCURRENCY=7
+CONCURRENCY=1
 
 
 function fatal_error() {
