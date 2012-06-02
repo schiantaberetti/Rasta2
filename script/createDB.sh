@@ -118,5 +118,5 @@ for pdf_file in `ls -1 $DB_DIR/pdf/*.pdf | sed 's#.*/##' `; do
 done
 
 
-print_status "DB creation complete. :-)" VISUAL
+#print_status "DB creation complete. :-)" VISUAL
 
