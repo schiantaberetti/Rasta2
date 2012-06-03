@@ -33,6 +33,130 @@ void closeDB(sqlite3 **db){
 	sqlite3_close(*db);
 }
 
+void dynStringAssignement(char **dst,const char *src)
+{
+	if((*dst)!=NULL)
+		free(*dst);
+	if(src!=NULL)
+	{
+		(*dst)=(char*)malloc(sizeof(char)*(strlen(src)+1));
+		strcpy(*dst,src);
+	}
+}
+char * chainString(const char* str1,const char* str2)
+{
+	char * neo=(char*)malloc(sizeof(char)*(strlen(str1)+strlen(str2)+1));
+	strcpy(neo,str1);
+	strcat(neo,str2);
+	return neo;
+}
+void destroySiftFileData(struct SiftFileData *sfd)
+{
+	free(sfd->name);
+	free(sfd->path);
+	free(sfd->uri);
+	free(sfd);
+}
+int fetchImageURI(sqlite3_stmt** stmt,char **image_uri)
+{
+	int cols = sqlite3_column_count(*stmt);
+	int length,value;
+	char *name=NULL,*path=NULL,*uri=NULL;
+	// fetch a row’s status
+	value = sqlite3_step(*stmt);
+
+	if(value == SQLITE_ROW){
+		name=(char*)sqlite3_column_text(*stmt,0);
+		path=(char*)sqlite3_column_text(*stmt,1);
+		uri=chainString(path,name);
+		dynStringAssignement(image_uri,uri);
+		
+		free(uri);
+		return(1);
+	}
+	else if(value == SQLITE_DONE){
+		// All rows finished
+		return(0);
+	}
+	else{
+		// Some error encountered
+		printf("Some error encountered\n");
+		return(0);
+	}
+	
+	
+}
+int fetchPDFInfo(sqlite3_stmt** stmt,char **pdfFilename,int *page_number)
+{
+	int cols = sqlite3_column_count(*stmt);
+	int length,value;
+	char *name=NULL,*path=NULL,*uri=NULL;
+	// fetch a row’s status
+	value = sqlite3_step(*stmt);
+
+	if(value == SQLITE_ROW){
+		(*page_number)=atoi((const char*)sqlite3_column_text(*stmt,0));
+		name=(char*)sqlite3_column_text(*stmt,1);
+		path=(char*)sqlite3_column_text(*stmt,2);
+		uri=chainString(path,name);
+		dynStringAssignement(pdfFilename,uri);
+		
+		free(uri);
+		return(1);
+	}
+	else if(value == SQLITE_DONE){
+		// All rows finished
+		return(0);
+	}
+	else{
+		// Some error encountered
+		printf("Some error encountered\n");
+		return(0);
+	}
+	
+}
+int fetchSiftQuery(sqlite3_stmt** stmt,struct SiftFileData **siftMetaData){
+	// Read the number of rows fetched
+	int cols = sqlite3_column_count(*stmt);
+	int length,value;
+	char * uri;
+	// fetch a row’s status
+	value = sqlite3_step(*stmt);
+
+	if(value == SQLITE_ROW){
+	// SQLITE_ROW means fetched a row
+		if((*siftMetaData)!=NULL)
+			free(*siftMetaData);
+		(*siftMetaData)=(struct SiftFileData *)malloc(sizeof(struct SiftFileData));
+		(*siftMetaData)->name=NULL;
+		(*siftMetaData)->path=NULL;
+		(*siftMetaData)->uri=NULL;
+	
+
+	// sqlite3_column_text returns a const void* , typecast it to const char*
+		(*siftMetaData)->id_sift=atoi((const char*)sqlite3_column_text(*stmt,DB_SIFT_ID));
+		dynStringAssignement(&((*siftMetaData)->name),(char*)sqlite3_column_text(*stmt,DB_SIFT_FILENAME));
+		dynStringAssignement(&((*siftMetaData)->path),(char*)sqlite3_column_text(*stmt,DB_SIFT_PATH));
+		(*siftMetaData)->id_pages=atoi((const char*)sqlite3_column_text(*stmt,DB_SIFT_ID_PAGES));
+		
+		uri=chainString((*siftMetaData)->path,(*siftMetaData)->name);
+		dynStringAssignement(&((*siftMetaData)->uri),uri);
+		free(uri);
+		
+		return(1);
+	}
+	else if(value == SQLITE_DONE){
+		// All rows finished
+		return(0);
+	}
+	else{
+		// Some error encountered
+		printf("Some error encountered\n");
+		return(0);
+	}
+
+
+}
 
 int fetchQuery(sqlite3_stmt** stmt,struct DBInfo **dbInfo){
 	// Read the number of rows fetched

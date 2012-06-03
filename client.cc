@@ -52,7 +52,8 @@ int main(int argc, char** argv){
 	strcpy(	outFileName, outFileStringBuilder.c_str());
 	parseText(outFileName);
 	extractTextFromPdf(pdfName,outFileName,numberOfPage,numberOfPage,tlx,tly,width,height);
-
+	
+	free(pdfName);
 	return 0;
 }
 

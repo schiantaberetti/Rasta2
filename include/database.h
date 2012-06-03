@@ -14,6 +14,11 @@
 #define SIFT_NAME 5
 #define SIFT_PATH 6
 
+#define DB_SIFT_ID 0
+#define DB_SIFT_FILENAME 1
+#define DB_SIFT_PATH 2
+#define DB_SIFT_ID_PAGES 3
+
 struct DBInfo{
 //Info from db
         char* paperName;
@@ -23,6 +28,14 @@ struct DBInfo{
 	char* siftPath;
 	char* siftName;
         int numberOfPage;
+};
+
+struct SiftFileData{
+	int id_sift;
+	char *name;
+	char *path;
+	int id_pages;
+	char *uri;
 };
 
 extern void openDB(char* databaseFile,sqlite3 **db);

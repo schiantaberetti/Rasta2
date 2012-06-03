@@ -14,6 +14,170 @@
 #include "sqlite3.h"
 #include <stdio.h>
 
+IplImage *preProcessTestImage(char *image_filename,CvPoint *tl,CvPoint *br)
+/*This function returns a cropped cleaned image of image_filename and compute
+ * the position (top_left,bottom_right) of the red object in the image.*/
+{
+	IplImage *input_image,*cleaned_image,*cropped_sample;
+	CvPoint offset;
+	
+	input_image=cvLoadImage( image_filename, 1 );
+
+	getRedAreaCoords(input_image,tl,br);
+	
+	cleaned_image=cleanUpRedComponent(input_image);
+	
+	cropped_sample = getCentredROI(cleaned_image,CROP_DIM,CROP_DIM,&offset);
+	
+	(tl->x)=(tl->x)-offset.x;
+	(tl->y)=(tl->y)-offset.y;
+	(br->x)=(br->x)-offset.x;
+	(br->y)=(br->y)-offset.y;
+	
+	cvReleaseImage(&input_image);
+	cvReleaseImage(&cleaned_image);
+	return cropped_sample;
+}
+
+void saveSiftToFile(IplImage* image,char *filename)
+{
+	int nFeat;
+	struct feature *feat_template;
+	
+	nFeat=sift_features( image, &feat_template );
+	export_features( filename, feat_template, nFeat );
+	free(feat_template);
+}
+
+char *getBestMatchInDB(char *test_siftFilename)
+/*Compare sifts in test_siftFilename with the sifts in the files of the DB and
+ * returns the name of the sift file that best matchs.*/
+{
+	char *targetSiftFile = NULL;
+	int n_best=0;
+	int matches;
+	
+	sqlite3 *db;
+	sqlite3_stmt* stmt;
+	struct SiftFileData *siftMetaData=NULL;
+	
+	openDB(DB_PATH,&db);	
+	
+	queryDB("SELECT * FROM sifts",&stmt,&db);
+	
+	while(fetchSiftQuery(&stmt,&siftMetaData)){
+		//printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
+		matches=getSiftMatches(test_siftFilename,siftMetaData->uri);
+		printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
+		if(matches>n_best)
+		{
+			n_best=matches;
+			dynStringAssignement(&targetSiftFile,siftMetaData->uri);
+		}
+		
+		destroySiftFileData(siftMetaData);//printf("I'm here!\n");
+		siftMetaData=NULL;
+	}
+
+	closeDB(&db);
+	return targetSiftFile;
+}
+void getSiftPdfCoords(char* db_siftFilename,char **pdfFilename,int *page_number)
+/*Return the pdf and the page number to which the sift is related*/
+{
+	char *query=NULL;
+	sqlite3 *db;
+	sqlite3_stmt* stmt;
+	
+	openDB(DB_PATH,&db);
+	db_siftFilename=chainString(db_siftFilename,"'");
+	query=chainString("select pages.number_of_page,papers.name,papers.path from papers,pages,sifts where pages.id_paper=papers.id_paper and pages.id_pages=sifts.id_pages and sifts.name='",db_siftFilename);	
+	queryDB(query,&stmt,&db);
+	fetchPDFInfo(&stmt,pdfFilename,page_number);
+
+	free(query);
+	free(db_siftFilename);
+	closeDB(&db);
+}
+void showResult(const char *siftFileName,const CvPoint *tl,const CvPoint *br)
+{
+	char *image_uri=NULL;
+	char *query=NULL;
+	IplImage *pdf_page;
+	sqlite3 *db;
+	sqlite3_stmt* stmt;
+	
+	openDB(DB_PATH,&db);	
+	siftFileName=chainString(siftFileName,"'");
+	query=chainString("select pages.name,pages.path from pages,sifts where pages.id_pages=sifts.id_pages and sifts.name='",siftFileName);
+	//printf("Query: %s",query);
+	queryDB(query,&stmt,&db);
+	fetchImageURI(&stmt,&image_uri);
+
+	closeDB(&db);
+	
+	printf("Top Left corner: x=%d y=%d\n",tl->x,tl->y);
+	printf("Bottom Right corner: x=%d y=%d\n",br->x,br->y);
+	
+	pdf_page=cvLoadImage(image_uri,1);
+	cvRectangle(pdf_page,                    // the dest image 
+                *tl,        // top left point 
+                *br,       // bottom right point 
+                cvScalar(0, 255, 0, 0), // the color; blue 
+                10, 8, 0);               // thickness, line type, shift
+	
+	std_show_image(pdf_page,"original",400,600);
+
+	cvWaitKey(0);
+
+	cvReleaseImage(&pdf_page);
+	free(query);
+	free(siftFileName);
+	free(image_uri);
+}
+char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,int *page_number)
+/*Returns the name of the most probable pdf from wich the photo test_image has been taken and
+ * set the page_number pointer to the right page in the pdf and
+ * set the coords and dimensions wrt the red circled area in the test_image.*/
+{
+	CvPoint br,tl;
+	IplImage *input_image;
+	CvMat *transformation_matrix;
+	char *test_siftFilename = "/tmp/testSiftFile";
+	char *db_siftFilename=NULL;
+	char *pdfFilename=NULL;
+	
+	input_image=preProcessTestImage(test_image,&tl,&br);
+	
+	printf("Saving SIFT to file...\n");
+	saveSiftToFile(input_image,test_siftFilename);
+	
+	printf("Beginning research in DB.\n");
+	db_siftFilename=getBestMatchInDB(test_siftFilename);
+	printf("Winner is: %s.\n",db_siftFilename);
+
+	getSiftPdfCoords(basename(db_siftFilename),&pdfFilename,page_number);
+	printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+	
+	int useless;
+	transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_siftFilename,&useless);
+	perspectiveTrasformation(transformation_matrix,&br);
+	perspectiveTrasformation(transformation_matrix,&tl);
+
+	*tlx = tl.x;
+	*tly = tl.y;
+	*width = br.x - tl.x;
+	*height = br.y - tl.y;
+	
+	showResult(basename(db_siftFilename),&tl,&br);
+	
+	cvReleaseMat(&transformation_matrix);
+	cvReleaseImage(&input_image);
+	free(db_siftFilename);
+	//free(pdfFilename);
+	return pdfFilename;
+}
+
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
 /*Returns the position of the circled text (inside photo_name file) in the pdf page represented by pdf_image_name*/
 {
@@ -75,7 +239,7 @@ int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* 
 	return 0;
 }
 
-char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,int *page_number)
+char* findPdfFileInDB_old(char* test_image,int* tlx,int* tly,int* width,int* height,int *page_number)
 /*Returns the name of the most probable pdf from wich the photo test_image has been taken and
  * set the page_number pointer to the right page in the pdf and
  * set the coords and dimensions wrt the red circled area in the test_image.*/
