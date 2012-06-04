@@ -52,6 +52,7 @@ int main(int argc, char** argv){
 	strcpy(	outFileName, outFileStringBuilder.c_str());
 	parseText(outFileName);
 	extractTextFromPdf(pdfName,outFileName,numberOfPage,numberOfPage,tlx,tly,width,height);
+	std::cout<<pdfName<<" "<<numberOfPage<<" "<<" "<<tlx<<" "<<tly<<" "<<" "<<width<<" "<<height<<std::endl;
 	
 	free(pdfName);
 	return 0;

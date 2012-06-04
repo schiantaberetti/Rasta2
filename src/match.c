@@ -68,7 +68,7 @@ char *getBestMatchInDB(char *test_siftFilename)
 	while(fetchSiftQuery(&stmt,&siftMetaData)){
 		//printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
 		matches=getSiftMatches(test_siftFilename,siftMetaData->uri);
-		printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
+		//printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
 		if(matches>n_best)
 		{
 			n_best=matches;
@@ -149,15 +149,15 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	
 	input_image=preProcessTestImage(test_image,&tl,&br);
 	
-	printf("Saving SIFT to file...\n");
+	//printf("Saving SIFT to file...\n");
 	saveSiftToFile(input_image,test_siftFilename);
 	
-	printf("Beginning research in DB.\n");
+	//printf("Beginning research in DB.\n");
 	db_siftFilename=getBestMatchInDB(test_siftFilename);
-	printf("Winner is: %s.\n",db_siftFilename);
+	//printf("Winner is: %s.\n",db_siftFilename);
 
 	getSiftPdfCoords(basename(db_siftFilename),&pdfFilename,page_number);
-	printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+	//printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
 	
 	int useless;
 	transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_siftFilename,&useless);
@@ -169,7 +169,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	*width = br.x - tl.x;
 	*height = br.y - tl.y;
 	
-	showResult(basename(db_siftFilename),&tl,&br);
+	//showResult(basename(db_siftFilename),&tl,&br);
 	
 	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&input_image);
