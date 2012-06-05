@@ -128,8 +128,9 @@ for pdf_file in `ls -1 $DB_DIR/pdf/*.pdf | sed 's#.*/##' `; do
 done
 
 print_status "Waiting for pending jobs..." DEBUG;
-while jobs -p ; do
-	sleep 1;
+for job in `jobs -p`
+do
+    wait $job || print_status "Failure in waiting for job with pid: $job"
 done
 
 print_status "DB creation completed. :-)" DEBUG;

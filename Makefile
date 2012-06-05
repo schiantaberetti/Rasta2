@@ -39,6 +39,7 @@ clean :
 	rm lib/libfeat.a
 	rm lib/libhead.a
 	rm -f note*
+	rm -f script/note*
 	rm $(EXECUTABLE)
 	make -C $(SRC_DIR)/ clean
 

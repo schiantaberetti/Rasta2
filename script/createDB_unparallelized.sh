@@ -97,4 +97,4 @@ let id_paper=id_paper+1
 done
 
 
-print_status "DB creation complete. :-)" VISUAL
+#print_status "DB creation complete. :-)" VISUAL

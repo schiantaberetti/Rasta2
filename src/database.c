@@ -9,6 +9,7 @@ void openDB(char* databaseFile,sqlite3 **db){
 	int value;
 	value = sqlite3_open(databaseFile, db);
 	if( value ){
+		printf("%s",databaseFile);
 	      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 	      sqlite3_close(db);	      
 	}

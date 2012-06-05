@@ -26,7 +26,7 @@ SQLITE_DB="database_test.db"
 
 
 # INITIALIZE SQULITE3 DB
-print_status "Reinitializing SQLITE DB." DEBUG
+print_status "Reinitializing SQLITE TEST-DB." DEBUG
 if [ -f "$DB_DIR/$SQLITE_DB" ];then
 rm "$DB_DIR/$SQLITE_DB"
 fi

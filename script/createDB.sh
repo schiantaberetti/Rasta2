@@ -133,7 +133,7 @@ do
     wait $job || print_status "Failure in waiting for job with pid: $job"
 done
 
-print_status "DB creation completed. :-)" DEBUG;
+#print_status "DB creation completed. :-)" DEBUG;
 
 #print_status "DB creation complete. :-)" VISUAL
 
