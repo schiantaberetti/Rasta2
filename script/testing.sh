@@ -37,15 +37,11 @@ for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | sed 's#.*/##' `; do
 	cp $DB_DIR/database.db database
 #BRUTTURA DA ELIMINARE
 	for image_test in `sqlite3 "$DB_DIR/$SQLITE_DB" "$QUERY"`; do
-		echo  $number_of_case $test_image
-		echo "CIAO"
-		
 		START=`date +%s%N`
 		#pdfextractor		
 		$OUTPUT_DIR/$EXECUTABLE $TEST_IMG_DIR/$image_test
 		#sleep 0.1
 		FINISH=`date +%s%N`
-echo "MIAO"
                 ELAPSED=`expr $FINISH - $START`
 		ELAPSED=`expr $ELAPSED / 1000000`
 		elapsed_time=`expr $ELAPSED + $elapsed_time`		
