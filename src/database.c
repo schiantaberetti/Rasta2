@@ -51,6 +51,20 @@ char * chainString(const char* str1,const char* str2)
 	strcat(neo,str2);
 	return neo;
 }
+struct SiftFileData* dynCopy(const struct SiftFileData* src)
+{
+	struct SiftFileData* neo = (struct SiftFileData *)malloc(sizeof(struct SiftFileData));
+	neo->id_pages = src->id_pages;
+	neo->id_sift = src -> id_sift;
+	neo->uri=NULL;
+	neo->name=NULL;
+	neo->path=NULL;
+	
+	dynStringAssignement(&(neo->uri),src->uri);
+	dynStringAssignement(&(neo->name),src->name);
+	dynStringAssignement(&(neo->path),src->path);
+	return neo;
+}
 void destroySiftFileData(struct SiftFileData *sfd)
 {
 	free(sfd->name);

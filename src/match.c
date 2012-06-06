@@ -49,17 +49,22 @@ void saveSiftToFile(IplImage* image,char *filename)
 	free(feat_template);
 }
 
+void releaseSiftMatchJob(struct SiftMatchJob* sift_job)
+{
+	
+}
 char *getBestMatchInDB(char *test_siftFilename)
 /*Compare sifts in test_siftFilename with the sifts in the files of the DB and
  * returns the name of the sift file that best matchs.*/
 {
-	char *targetSiftFile = NULL;
+	//char *targetSiftFile = NULL;
 	int n_best=0;
 	int matches;
 	
 	sqlite3 *db;
 	sqlite3_stmt* stmt;
 	struct SiftFileData *siftMetaData=NULL;
+	struct SiftFileData *db_target_sift=NULL;
 	
 	openDB(DB_PATH,&db);	
 	
@@ -68,48 +73,59 @@ char *getBestMatchInDB(char *test_siftFilename)
 	while(fetchSiftQuery(&stmt,&siftMetaData)){
 		//printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
 		matches=getSiftMatches(test_siftFilename,siftMetaData->uri);
-		//printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
+		printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
 		if(matches>n_best)
 		{
 			n_best=matches;
-			dynStringAssignement(&targetSiftFile,siftMetaData->uri);
+			if(db_target_sift!=NULL)
+				destroySiftFileData(db_target_sift);
+			db_target_sift=dynCopy(siftMetaData);
 		}
 		
-		destroySiftFileData(siftMetaData);//printf("I'm here!\n");
+		destroySiftFileData(siftMetaData);
 		siftMetaData=NULL;
 	}
 
 	closeDB(&db);
-	return targetSiftFile;
+	return db_target_sift;
 }
-void getSiftPdfCoords(char* db_siftFilename,char **pdfFilename,int *page_number)
+void getSiftPdfCoords(struct SiftFileData* db_sift,char **pdfFilename,int *page_number)
 /*Return the pdf and the page number to which the sift is related*/
 {
 	char *query=NULL;
+	char *db_siftID=NULL;
+	char sift_id[5];
 	sqlite3 *db;
 	sqlite3_stmt* stmt;
 	
 	openDB(DB_PATH,&db);
-	db_siftFilename=chainString(db_siftFilename,"'");
-	query=chainString("select pages.number_of_page,papers.name,papers.path from papers,pages,sifts where pages.id_paper=papers.id_paper and pages.id_pages=sifts.id_pages and sifts.name='",db_siftFilename);	
+	
+	sprintf(sift_id,"%d",db_sift->id_sift);
+	printf("SIFT_ID: %s\n",sift_id);
+	db_siftID=chainString(sift_id,"'");
+	query=chainString("select pages.number_of_page,papers.name,papers.path from papers,pages,sifts where pages.id_paper=papers.id_paper and pages.id_pages=sifts.id_pages and sifts.id_sift='",db_siftID);	
 	queryDB(query,&stmt,&db);
 	fetchPDFInfo(&stmt,pdfFilename,page_number);
 
 	free(query);
-	free(db_siftFilename);
+	free(db_siftID);
 	closeDB(&db);
 }
-void showResult(const char *siftFileName,const CvPoint *tl,const CvPoint *br)
+void showResult(const struct SiftFileData *target_sift,const CvPoint *tl,const CvPoint *br)
 {
 	char *image_uri=NULL;
 	char *query=NULL;
+	char *siftID=NULL;
+	char sift_id[5];
 	IplImage *pdf_page;
 	sqlite3 *db;
 	sqlite3_stmt* stmt;
 	
 	openDB(DB_PATH,&db);	
-	siftFileName=chainString(siftFileName,"'");
-	query=chainString("select pages.name,pages.path from pages,sifts where pages.id_pages=sifts.id_pages and sifts.name='",siftFileName);
+	sprintf(sift_id,"%d",target_sift->id_sift);
+	printf("SIFT_ID: %s\n",sift_id);
+	siftID=chainString(sift_id,"'");
+	query=chainString("select pages.name,pages.path from pages,sifts where pages.id_pages=sifts.id_pages and sifts.id_sift='",siftID);
 	//printf("Query: %s",query);
 	queryDB(query,&stmt,&db);
 	fetchImageURI(&stmt,&image_uri);
@@ -132,7 +148,7 @@ void showResult(const char *siftFileName,const CvPoint *tl,const CvPoint *br)
 
 	cvReleaseImage(&pdf_page);
 	free(query);
-	free(siftFileName);
+	free(siftID);
 	free(image_uri);
 }
 char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,int *page_number)
@@ -144,7 +160,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	IplImage *input_image;
 	CvMat *transformation_matrix;
 	char *test_siftFilename = "/tmp/testSiftFile";
-	char *db_siftFilename=NULL;
+	struct SiftFileData *db_target_sift=NULL;
 	char *pdfFilename=NULL;
 	
 	input_image=preProcessTestImage(test_image,&tl,&br);
@@ -152,30 +168,44 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	//printf("Saving SIFT to file...\n");
 	saveSiftToFile(input_image,test_siftFilename);
 	
-	//printf("Beginning research in DB.\n");
-	db_siftFilename=getBestMatchInDB(test_siftFilename);
-	//printf("Winner is: %s.\n",db_siftFilename);
-
-	getSiftPdfCoords(basename(db_siftFilename),&pdfFilename,page_number);
-	//printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
-	
-	int useless;
-	transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_siftFilename,&useless);
-	perspectiveTrasformation(transformation_matrix,&br);
-	perspectiveTrasformation(transformation_matrix,&tl);
-
-	*tlx = tl.x;
-	*tly = tl.y;
-	*width = br.x - tl.x;
-	*height = br.y - tl.y;
-	
-	//showResult(basename(db_siftFilename),&tl,&br);
-	
-	cvReleaseMat(&transformation_matrix);
 	cvReleaseImage(&input_image);
-	free(db_siftFilename);
-	//free(pdfFilename);
-	return pdfFilename;
+	
+	//printf("Beginning research in DB.\n");
+	db_target_sift=getBestMatchInDB(test_siftFilename);
+	//printf("Winner is: %s.\n",db_target_sift->uri);
+
+	if(db_target_sift!=NULL)
+	{
+		getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
+		printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+		
+		int useless;
+		transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);
+		
+		if(transformation_matrix!=NULL)
+		{
+			perspectiveTrasformation(transformation_matrix,&br);
+			perspectiveTrasformation(transformation_matrix,&tl);
+
+			*tlx = tl.x;
+			*tly = tl.y;
+			*width = br.x - tl.x;
+			*height = br.y - tl.y;
+			
+			showResult(db_target_sift,&tl,&br);
+			
+			cvReleaseMat(&transformation_matrix);
+			destroySiftFileData(db_target_sift);
+			return pdfFilename;
+		}
+		else
+		{
+			destroySiftFileData(db_target_sift);
+			return PDF_NOT_FOUND;
+		}
+	}
+	else
+		return PDF_NOT_FOUND;
 }
 
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)
