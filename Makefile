@@ -40,6 +40,7 @@ clean :
 	rm lib/libhead.a
 	rm -f note*
 	rm -f script/note*
+	rm -rf script/database
 	rm $(EXECUTABLE)
 	make -C $(SRC_DIR)/ clean
 

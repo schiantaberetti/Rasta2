@@ -73,7 +73,7 @@ char *getBestMatchInDB(char *test_siftFilename)
 	while(fetchSiftQuery(&stmt,&siftMetaData)){
 		//printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
 		matches=getSiftMatches(test_siftFilename,siftMetaData->uri);
-		printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
+		//printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
 		if(matches>n_best)
 		{
 			n_best=matches;
@@ -177,7 +177,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	if(db_target_sift!=NULL)
 	{
 		getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
-		printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+		//printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
 		
 		int useless;
 		transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);

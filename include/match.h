@@ -3,7 +3,8 @@
 #include "jhead.h"
 
 #define PDF_NOT_FOUND "PDFNotFound"
-#define CROP_DIM	1000
+//AUMENTARE
+#define CROP_DIM	1500
 
 
 extern int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height);
