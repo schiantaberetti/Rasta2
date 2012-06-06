@@ -101,7 +101,7 @@ void getSiftPdfCoords(struct SiftFileData* db_sift,char **pdfFilename,int *page_
 	openDB(DB_PATH,&db);
 	
 	sprintf(sift_id,"%d",db_sift->id_sift);
-	printf("SIFT_ID: %s\n",sift_id);
+	//printf("SIFT_ID: %s\n",sift_id);
 	db_siftID=chainString(sift_id,"'");
 	query=chainString("select pages.number_of_page,papers.name,papers.path from papers,pages,sifts where pages.id_paper=papers.id_paper and pages.id_pages=sifts.id_pages and sifts.id_sift='",db_siftID);	
 	queryDB(query,&stmt,&db);
@@ -192,7 +192,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 			*width = br.x - tl.x;
 			*height = br.y - tl.y;
 			
-			showResult(db_target_sift,&tl,&br);
+			//showResult(db_target_sift,&tl,&br);
 			
 			cvReleaseMat(&transformation_matrix);
 			destroySiftFileData(db_target_sift);

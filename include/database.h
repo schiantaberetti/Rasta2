@@ -40,14 +40,22 @@ struct SiftFileData{
 
 extern void openDB(char* databaseFile,sqlite3 **db);
 
-
 extern void queryDB(char* query,sqlite3_stmt** stmt,sqlite3 **db);
-
 
 extern void closeDB(sqlite3 **db);
 
-
 extern int fetchQuery(sqlite3_stmt** stmt,struct DBInfo **dbInfo);
 
+extern int fetchPDFInfo(sqlite3_stmt** stmt,char **pdfFilename,int *page_number);
+
+extern int fetchSiftQuery(sqlite3_stmt** stmt,struct SiftFileData **siftMetaData);
+
+extern int fetchImageURI(sqlite3_stmt** stmt,char **image_uri);
+
+extern void destroySiftFileData(struct SiftFileData *sfd);
+
+extern struct SiftFileData* dynCopy(const struct SiftFileData* src);
+
+extern void dynStringAssignement(char **dst,const char *src);
 
 #endif

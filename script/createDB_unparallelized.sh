@@ -81,7 +81,19 @@ pdf_basename=`echo $pdf_file| cut -d '.' -f 1`
 # Extracting SIFT
 for image in `ls -1 $DB_DIR/pdf_img/$pdf_basename*.$EXT | sed 's#.*/##' `; do
 print_status "Extracting SIFT from: $image" DEBUG;
-num_page=`echo $image | sed 's/[^0-9]*//' | cut -d '.' -f 1`
+
+#extract page number
+OLD_IFS="$IFS"
+IFS="-"
+STR_ARRAY=( $image )
+IFS="$OLD_IFS"
+
+OLD_IFS="$IFS"
+IFS="."
+num_page=( ${STR_ARRAY[1]} )
+IFS="$OLD_IFS"
+
+#num_page=`echo $image | sed 's/[^0-9]*//' | cut -d '.' -f 1`
 
 sqlite3 "$DB_DIR/$SQLITE_DB" "INSERT INTO pages (number_of_page,id_paper,path, name, id_pages) VALUES ('$num_page','$id_paper','$DB_DIR/pdf_img/','$image','$id_pages')";
 
