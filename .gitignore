@@ -9,5 +9,6 @@
 *.a
 *.~
 *.db
+*~
 tools/img2sifts
 pdfextractor
