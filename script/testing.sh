@@ -4,6 +4,7 @@ OUTPUT_DIR="`readlink -f "../"`"
 EXECUTABLE="pdfextractor"
 PDF_DIR_MARINAI="`readlink -f "../database/pdf-marinai"`"
 PDF_DIR="`readlink -f "../database/pdf"`"
+IMG_DIR="`readlink -f "../database/pdf_img"`"
 DB_DIR="`readlink -f "../database"`"
 TEST_IMG_DIR="`readlink -f "../test-img-marinai"`"
 SQLITE_DB="database_test.db"
@@ -38,8 +39,8 @@ for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | sed 's#.*/##' `; do
 	mkdir database
 	cp $DB_DIR/database.db database
 #BRUTTURA DA ELIMINARE
-
-	echo "-----Number of pdf in the db = $number_of_examined_pdf-----"
+	number_of_pages=`find $IMG_DIR -type f | wc -l`;
+	echo "-----Number of pdf in the db = $number_of_examined_pdf number of pages=$number_of_pages-----"
 	for image_test in `sqlite3 "$DB_DIR/$SQLITE_DB" "$QUERY"`; do
 		echo "Testing query = $image_test number = $number_of_query"
 		START=`date +%s%N`	
@@ -52,7 +53,7 @@ for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | sed 's#.*/##' `; do
 		let number_of_query=number_of_query+1;		
 	done
 	elapsed_time=`expr $elapsed_time / $number_of_test_image`
-	echo $number_of_examined_pdf $elapsed_time >> $OUTPUT_DIR/$RESULT_FILE
+	echo $number_of_examined_pdf $number_of_pages $elapsed_time >> $OUTPUT_DIR/$RESULT_FILE
 	elapsed_time=0;        
 	number_of_query=0;
 let number_of_examined_pdf=number_of_examined_pdf+1;
