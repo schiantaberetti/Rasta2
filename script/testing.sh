@@ -94,7 +94,7 @@ total_testset_time=0;
 number_of_query=1;
 
 #create the db-test
-./createDB.sh
+./createTestDB.sh
 #NUMBER OF TEST IMAGE
 number_of_test_image=`sqlite3 "$SQLITE_DB" "$COUNT_QUERY"`;
 
@@ -110,7 +110,7 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf` ]; do
 	for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | tail -n $DB_INC_STEP | sed 's#.*/##' `;do
 		mv "$PDF_DIR_MARINAI/$pdf_file" "$PDF_DIR"
 	done
-	./createDB_unparallelized.sh
+	./createDB.sh
 	let DB_pdf_size=DB_pdf_size+DB_INC_STEP
 	
 	echo "Execution over the test images."
