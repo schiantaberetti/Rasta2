@@ -1,21 +1,51 @@
 #!/bin/bash
- 
+function calculate() {
+	if [ $# -gt 0 ];then 
+		echo "scale=4; $1" | bc ;
+	fi
+}
 
 function display_image() {
-	`mogrify -draw 'circle 100,100 110,110' -write pippo.jpg $1/$2 && display pippo.jpg`
-	rm pippo.jpg 
+	show_image="pippo.jpg"
+	border_size=6
+	borderx=` calculate "($3 + $border_size)" `
+	bordery=` calculate "($4 + $border_size)" `
+
+	`mogrify -fill red -stroke black -draw "rectangle $3,$4 $borderx,$bordery" -write $show_image $1/$2`
+	borderx=` calculate "($5 + $border_size)" `
+	bordery=` calculate "($6 + $border_size)" `
+	`mogrify -fill red -stroke black -draw "rectangle $5,$6 $borderx,$bordery" $show_image`
+	borderx=` calculate "($7 + $border_size)" `
+	bordery=` calculate "($8 + $border_size)" `
+	`mogrify -fill red -stroke black -draw "rectangle $7,$8 $borderx,$bordery" $show_image`
+	borderx=` calculate "($9 + $border_size)" `
+	bordery=` calculate "(${10} + $border_size)" `
+	`mogrify -fill red -stroke black -draw "rectangle $9,${10} $borderx,$bordery" $show_image`
+	borderx=` calculate "(${11} + $border_size)" `
+	bordery=` calculate "(${12} + $border_size)" `
+	`mogrify -fill red -stroke black -draw "rectangle ${11},${12} $borderx,$bordery" $show_image`
+	display $show_image
+	rm $show_image 
 }
 
 
-
-PDF_DIR="`readlink -f "../database/pdf"`"
-DB_DIR="`readlink -f "../database"`"
-TEST_IMG_DIR="`readlink -f "../test-img-marinai"`"
 SQLITE_DB="../test/database_test.db"
-TEST_IMAGE="test-4520a037_page1.jpg"
+TEST_IMAGE="4520a037-1.jpg"
+IMG_SHOW_DIR="img_to_show"
 
-path=`sqlite3 "$SQLITE_DB" "select path from test_images where name= '$TEST_IMAGE'"`;
-display_image $path $TEST_IMAGE
+sx=5
+sy=280
+dx=300
+dy=$sy
+bx=170
+by=305
+ux=$bx
+uy=270
+inx=70
+iny=80
+
+#path=`sqlite3 "$SQLITE_DB" "select path from test_images where name= '$TEST_IMAGE'"`;
+display_image $IMG_SHOW_DIR $TEST_IMAGE $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 
 
 # INSERT DATA OF THE TEST_IMAGES
