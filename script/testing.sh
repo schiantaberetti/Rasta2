@@ -40,7 +40,7 @@ for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | sed 's#.*/##' `; do
 	cp $DB_DIR/database.db database
 #BRUTTURA DA ELIMINARE
 	number_of_pages=`find $IMG_DIR -type f | wc -l`;
-	echo "-----Number of pdf in the db = $number_of_examined_pdf number of pages=$number_of_pages-----"
+	echo "-----Number of pdf in the db = $number_of_examined_pdf number of pages = $number_of_pages-----"
 	for image_test in `sqlite3 "$DB_DIR/$SQLITE_DB" "$QUERY"`; do
 		echo "Testing query = $image_test number = $number_of_query"
 		START=`date +%s%N`	
