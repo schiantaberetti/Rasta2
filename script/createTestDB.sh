@@ -63,3 +63,5 @@ sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_p
 
 sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520z029_page0.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520z029.pdf','0',0,0,0,0,0,0,0,0,0,0)";
 
+echo "Insert the coordinates of the example"
+./insertCoordsIntoTestDB.sh
