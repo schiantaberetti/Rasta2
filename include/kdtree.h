@@ -18,7 +18,7 @@
 #ifndef KDTREE_H
 #define KDTREE_H
 
-#include "cxcore.h"
+#include "opencv/cxcore.h"
 
 
 /********************************* Structures ********************************/

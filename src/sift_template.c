@@ -7,9 +7,9 @@
 
 #include "template_extractor.h"
 
-#include <cv.h>
-#include <cxcore.h>
-#include <highgui.h>
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
+#include <opencv/highgui.h>
 
 #include <stdio.h>
 #include "sift_template.h"

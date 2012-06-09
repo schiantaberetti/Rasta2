@@ -30,7 +30,7 @@
 #ifndef _pdftotext_h_
 #define _pdftotext_h_ 1
 
-#include <poppler-config.h>
+#include <poppler/poppler-config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>

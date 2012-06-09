@@ -1,4 +1,4 @@
-Rasta2 is a program
+Rasta2 is a program that extract text from a pdf given an image (photo) of one page of that pdf with a part of text highligthed with red ink.
 
 Dependencies:
 In order to compile and use Rasta2 you will need the following libraries:
@@ -6,7 +6,7 @@ In order to compile and use Rasta2 you will need the following libraries:
 * poppler <= 0.18.4
 * sqlite3
 
-*********to compile************
+*********To compile************
 make
 
 *********To create the DB******
@@ -14,5 +14,10 @@ place your pdf in the database/pdf directory and type:
 cd script
 ./createDB.sh
 
-If your computer have lots of cpu, otherwise
-./createDB_unparallelized.sh
+*********To execute the program*******
+./pdfextractor test/avaro-3.jpg
+
+*********Performance Test********
+place some pdf in the database/marinai-pdf directory and type:
+cd script
+./testing.sh
