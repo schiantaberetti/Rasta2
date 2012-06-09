@@ -904,7 +904,7 @@ void ProcessFile(const char * FileName,ImageInfo_t** ImageInfo)
                     show_IPTC(IptcSection->Data, IptcSection->Size);
                 }
             }
-            printf("\n");
+            //printf("\n");
         }
     }
 

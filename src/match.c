@@ -1,10 +1,3 @@
-/*
-  Detects SIFT features in two images and finds matches between them.
-
-  Copyright (C) 2006-2010  Rob Hess <hess@eecs.oregonstate.edu>
-
-  @version 1.1.2-20100521
-*/
 
 #include "template_extractor.h"
 #include "sift_template.h"
@@ -13,6 +6,18 @@
 #include "database.h"
 #include "sqlite3.h"
 #include <stdio.h>
+#include "list.h"
+#include <pthread.h>
+
+struct SiftThread {
+	struct list_head list;
+	pthread_t thread;
+
+	char *test_sift_file;
+
+	struct SiftFileData *siftMetaData;
+};
+
 
 IplImage *preProcessTestImage(char *image_filename,CvPoint *tl,CvPoint *br)
 /*This function returns a cropped cleaned image of image_filename and compute
@@ -49,11 +54,106 @@ void saveSiftToFile(IplImage* image,char *filename)
 	free(feat_template);
 }
 
-void releaseSiftMatchJob(struct SiftMatchJob* sift_job)
+int startSiftMatchJob(struct SiftThread* job)
 {
-	
+	int matches;
+	struct SiftFileData *siftMetaData = job->siftMetaData;
+#ifdef DEBUG 
+	printf("Starting Sift Job of %s.\n",siftMetaData->name);
+#endif	
+	matches=getSiftMatches(job->test_sift_file,siftMetaData->uri);
+#ifdef DEBUG
+	printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
+#endif
+	return matches; 
 }
+void destroySiftThreadJob(struct SiftThread *job)
+{
+#ifdef DEBUG 
+	printf("freeing test string.\n");
+#endif
+	free(job->test_sift_file);
+#ifdef DEBUG
+	printf("freeing sift meta data.\n");
+#endif
+	destroySiftFileData(job->siftMetaData);
+#ifdef DEBUG
+	printf("freeing job structure.\n");
+#endif
+	free(job);
+#ifdef DEBUG 	
+	printf("done freeing.\n");
+#endif
+}
+
+struct SiftFileData *siftJobsResultProcessor(struct list_head* thread_list)
+{
+	struct SiftThread *job;
+	struct SiftFileData *db_target_sift=NULL;
+	int n_best=0;
+	int *matches;
+	
+	struct list_head* iter,*q;
+	list_for_each_safe(iter,q, thread_list){
+		job = container_of(iter,struct SiftThread,list);
+#ifdef DEBUG 
+			printf("Waiting: %s\n",job->siftMetaData->name); 
+#endif
+		pthread_join( job->thread, (&matches));
+
+		if(matches>n_best)
+		{
+			n_best=matches;
+			if(db_target_sift!=NULL)
+				destroySiftFileData(db_target_sift);
+			db_target_sift=dynCopy(job->siftMetaData);
+		}
+		list_del(iter);
+		destroySiftThreadJob(job);
+	}
+	
+	return db_target_sift;
+}
+struct SiftThread* createSiftJob(char *test_siftFilename,struct SiftFileData *siftMetaData)
+{
+	struct SiftThread* job;
+	job=(struct SiftThread*)malloc(sizeof(struct SiftThread));
+	job->test_sift_file=NULL;
+	dynStringAssignement(&(job->test_sift_file),test_siftFilename);
+	job->siftMetaData=dynCopy(siftMetaData);
+	return job;
+}
+
 char *getBestMatchInDB(char *test_siftFilename)
+/*Compare sifts in test_siftFilename with the sifts in the files of the DB and
+ * returns the name of the sift file that best matchs.*/
+{
+	struct list_head* thread_list=(struct list_head*)malloc(sizeof(struct list_head));
+	INIT_LIST_HEAD(thread_list);
+	struct SiftThread *job=NULL;
+
+	struct SiftFileData *siftMetaData=NULL; //Iterator
+	
+	sqlite3 *db;
+	sqlite3_stmt* stmt;
+	openDB(DB_PATH,&db);	
+	queryDB("SELECT * FROM sifts",&stmt,&db);
+	
+	while(fetchSiftQuery(&stmt,&siftMetaData)){
+#ifdef DEBUG
+		printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
+#endif
+		job=createSiftJob(test_siftFilename, siftMetaData); //INIT the job structure
+		pthread_create( &(job->thread), NULL, startSiftMatchJob, job);			// Release the job
+		list_add_tail(&(job->list),thread_list)		;					// Add the job to the pending jobs list
+	}
+	closeDB(&db);
+	
+	siftMetaData=siftJobsResultProcessor(thread_list);
+	free(thread_list);
+	return siftMetaData;
+}
+char *getBestMatchInDB_unparallel(char *test_siftFilename)
 /*Compare sifts in test_siftFilename with the sifts in the files of the DB and
  * returns the name of the sift file that best matchs.*/
 {
@@ -89,6 +189,7 @@ char *getBestMatchInDB(char *test_siftFilename)
 	closeDB(&db);
 	return db_target_sift;
 }
+
 void getSiftPdfCoords(struct SiftFileData* db_sift,char **pdfFilename,int *page_number)
 /*Return the pdf and the page number to which the sift is related*/
 {
@@ -123,6 +224,7 @@ void showResult(const struct SiftFileData *target_sift,const CvPoint *tl,const C
 	
 	openDB(DB_PATH,&db);	
 	sprintf(sift_id,"%d",target_sift->id_sift);
+
 	printf("SIFT_ID: %s\n",sift_id);
 	siftID=chainString(sift_id,"'");
 	query=chainString("select pages.name,pages.path from pages,sifts where pages.id_pages=sifts.id_pages and sifts.id_sift='",siftID);
@@ -164,20 +266,27 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 	char *pdfFilename=NULL;
 	
 	input_image=preProcessTestImage(test_image,&tl,&br);
-	
-	//printf("Saving SIFT to file...\n");
+
+#ifdef DEBUG	
+	printf("Saving SIFT to file...\n");
+#endif
 	saveSiftToFile(input_image,test_siftFilename);
 	
 	cvReleaseImage(&input_image);
 	
-	//printf("Beginning research in DB.\n");
+#ifdef DEBUG
+	printf("Beginning research in DB.\n");
+#endif
 	db_target_sift=getBestMatchInDB(test_siftFilename);
-	//printf("Winner is: %s.\n",db_target_sift->uri);
-
+#ifdef DEBUG
+	printf("Winner is: %s.\n",db_target_sift->uri);
+#endif
 	if(db_target_sift!=NULL)
 	{
 		getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
-		//printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+#ifdef DEBUG
+		printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+#endif
 		
 		int useless;
 		transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);
@@ -191,9 +300,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 			*tly = tl.y;
 			*width = br.x - tl.x;
 			*height = br.y - tl.y;
-			
-			//showResult(db_target_sift,&tl,&br);
-			
+#ifdef DEBUG
+			showResult(db_target_sift,&tl,&br);
+#endif
 			cvReleaseMat(&transformation_matrix);
 			destroySiftFileData(db_target_sift);
 			return pdfFilename;
