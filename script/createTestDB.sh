@@ -37,7 +37,7 @@ sqlite3 "$SQLITE_DB" < /tmp/sqlitetmpfile
 # INSERT DATA OF THE TEST_IMAGES
 sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520a037_page1.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520a037.pdf','1',0,0,0,0,0,0,0,0,0,0)";
 
-sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520a099_page4.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520a099.pdf','4',0,0,0,0,0,0,0,0,0,0)";
+sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520a099_page4.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520a099.pdf','4',0,390,304,390,174,324,174,462,174,393)";
 
 sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520a207_page0.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520a207.pdf','0',0,0,0,0,0,0,0,0,0,0)";
 
@@ -63,3 +63,5 @@ sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_p
 
 sqlite3 "$SQLITE_DB" "INSERT INTO test_images (name,path,name_of_pdf,number_of_pages,sx_x,sx_y,dx_x,dx_y,up_x,up_y,down_x,down_y,inner_x,inner_y) VALUES ('test-4520z029_page0.jpg','$TEST_IMG_DIR/','$PDF_DIR/4520z029.pdf','0',0,0,0,0,0,0,0,0,0,0)";
 
+echo "Insert the coordinates of the example"
+./insertCoordsIntoTestDB.sh
