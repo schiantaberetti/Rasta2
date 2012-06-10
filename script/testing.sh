@@ -63,7 +63,10 @@ function matchDBResult(){
 	pdf_name=`sqlite3 ../test/database_test.db "select name_of_pdf from test_images where name='$test_image'"`
 	number_page=`sqlite3 ../test/database_test.db "select number_of_pages from test_images where name='$test_image'"`
 	
-	if [ $pdf_name=`echo $program_out | cut -d ' ' -f 1` -a $number_page= `echo $program_out | cut -d ' ' -f 2`];then
+	pdf_name_retrieved=`echo $program_out | cut -d ' ' -f 1`
+	number_page_retrieved=`echo $program_out | cut -d ' ' -f 2`
+	
+	if [ $pdf_name=$pdf_name_retrieved -a $number_page=$number_page_retrieved  ] ;then
 		test_rectangle 	`echo $program_out | cut -d ' ' -f 3` `echo $program_out | cut -d ' ' -f 4` `echo $program_out | cut -d ' ' -f 5` `echo $program_out | cut -d ' ' -f 6` $test_image
 	else
 		echo "NO"
@@ -104,7 +107,7 @@ if [ -f "$OUTPUT_DIR/$RESULT_FILE" ];then
 fi
 
 #################################################
-while [ `ls -A $PDF_DIR_MARINAI/*.pdf` ]; do
+while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	# Moving pdf chunk to pdf directory
 	echo "Moving pdf chunk to pdf directory."
 	for pdf_file in `ls -1 $PDF_DIR_MARINAI/*.pdf | tail -n $DB_INC_STEP | sed 's#.*/##' `;do
