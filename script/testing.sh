@@ -141,8 +141,8 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	done	 
 
 	# SAVING TEST RESULT
-	total_testset_time=calculate "$total_testset_time/$number_of_test_image" 
-	accuracy=calculate "$test_passed/$number_of_test_image"
+	total_testset_time=`calculate $total_testset_time/$number_of_test_image`
+	accuracy=`calculate $test_passed/$number_of_test_image`
 	echo $DB_pdf_size $number_of_pages $total_testset_time $accuracy >> "$OUTPUT_DIR/$RESULT_FILE"
 
 done
