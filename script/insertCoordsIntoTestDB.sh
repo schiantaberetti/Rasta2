@@ -59,85 +59,85 @@ IMG_SHOW_DIR="img_to_show"
 DEBUG=0
 
 ##############  sx   dx    by    uy       test_img               visual_img
-set_parameters "5" "300" "305" "270" "test-4520a037_page1.jpg" "4520a037-1.jpg"
+set_parameters "0" "320" "310" "265" "test-4520a037_page1.jpg" "4520a037-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "5" "300" "470" "320" "test-4520a099_page4.jpg" "4520a099-4.jpg"
+set_parameters "0" "325" "475" "315" "test-4520a099_page4.jpg" "4520a099-4.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "5" "600" "160" "30" "test-4520a207_page0.jpg" "4520a207-0.jpg"
+set_parameters "0" "605" "165" "25" "test-4520a207_page0.jpg" "4520a207-0.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "320" "550" "500" "400" "test-4520a409_page1.jpg" "4520a409-1.jpg"
+set_parameters "315" "555" "505" "395" "test-4520a409_page1.jpg" "4520a409-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "280" "560" "180" "100" "test-4520a678_formula_page3.jpg" "4520a678-3.jpg"
+set_parameters "275" "565" "185" "95" "test-4520a678_formula_page3.jpg" "4520a678-3.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "280"  "590" "540" "460" "test-4520a678_paragrafo3_page3.jpg" "4520a678-3.jpg"
+set_parameters "275"  "595" "545" "455" "test-4520a678_paragrafo3_page3.jpg" "4520a678-3.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "5" "320" "590" "480" "test-4520a678_paragrafo2_page3.jpg" "4520a678-3.jpg"
+set_parameters "0" "325" "595" "475" "test-4520a678_paragrafo2_page3.jpg" "4520a678-3.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "170" "310" "150" "70" "test-4520a678_immagine_page1.jpg" "4520a678-1.jpg"
+set_parameters "165" "315" "155" "65" "test-4520a678_immagine_page1.jpg" "4520a678-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "280" "570" "700" "630" "test-4520a678_paragrafo_page1.jpg" "4520a678-1.jpg"
+set_parameters "275" "575" "705" "625" "test-4520a678_paragrafo_page1.jpg" "4520a678-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "200" "330" "150" "90" "test-4520a957_formula_page1.jpg" "4520a957-1.jpg"
+set_parameters "195" "335" "155" "85" "test-4520a957_formula_page1.jpg" "4520a957-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "40" "200" "700" "650" "test-4520a957_frase_page1.jpg" "4520a957-1.jpg"
+set_parameters "35" "205" "705" "645" "test-4520a957_frase_page1.jpg" "4520a957-1.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "50" "300" "220" "160" "test-4520b235_page3.jpg" "4520b235-3.jpg"
+set_parameters "45" "305" "225" "155" "test-4520b235_page3.jpg" "4520b235-3.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "290" "590" "530" "390" "test-4520b235_paragrafo2_page3.jpg" "4520b235-3.jpg"
+set_parameters "285" "595" "535" "385" "test-4520b235_paragrafo2_page3.jpg" "4520b235-3.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 fi
 
-set_parameters "160" "440" "160" "80" "test-4520z029_page0.jpg" "4520z029.jpg"
+set_parameters "155" "445" "165" "75" "test-4520z029_page0.jpg" "4520z029.jpg"
 update_row $test_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
 if [ "$DEBUG" -eq "1" ]; then
 	display_image $IMG_SHOW_DIR $visual_img $sx $sy $dx $dy $ux $uy $bx $by $inx $iny
