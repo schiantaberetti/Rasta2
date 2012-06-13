@@ -121,6 +121,7 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	
 	echo "Execution over the test images."
 	number_of_pages=`ls $IMG_DIR/*.jpg | wc -l`;
+	DB_pdf_size=`ls $PDF_DIR/*.pdf | wc -l`
 	echo "-----Number of pdf in the db = $DB_pdf_size number of pages = $number_of_pages-----"
 	
 	total_testset_time=0;        
