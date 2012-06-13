@@ -18,6 +18,8 @@ cd script
 ./pdfextractor test/avaro-3.jpg
 
 *********Performance Test********
-place some pdf in the database/marinai-pdf directory and type:
-cd script
-./testing.sh
+The testing.sh, createTestDB.sh and insertCoordsIntoTestDB.sh scripts 
+are relative to a performance test over pdf documents that haven't been 
+published on this git repo due to copyright reasons.
+So if you want to perform a performance test you will need to manually 
+modify those scripts. :-(
