@@ -56,33 +56,36 @@ function test_rectangle(){
 	fi	
 }
 function matchDBResult(){
-	res="YES"
-	program_out=$1
-	test_image=$2
+	out_pdf_name=$1
+	out_page_number=$2
+	out_rect_x=$3
+	out_rect_y=$4
+	out_rect_width=$5
+	out_rect_height=$6
+	test_image=`basename $7`
 	
 	pdf_name=`sqlite3 ../test/database_test.db "select name_of_pdf from test_images where name='$test_image'"`
 	number_page=`sqlite3 ../test/database_test.db "select number_of_pages from test_images where name='$test_image'"`
 	
-	pdf_name_retrieved=`echo $program_out | cut -d ' ' -f 1`
-	number_page_retrieved=`echo $program_out | cut -d ' ' -f 2`
-	
-	if [ $pdf_name=$pdf_name_retrieved -a $number_page=$number_page_retrieved  ] ;then
-		test_rectangle 	`echo $program_out | cut -d ' ' -f 3` `echo $program_out | cut -d ' ' -f 4` `echo $program_out | cut -d ' ' -f 5` `echo $program_out | cut -d ' ' -f 6` $test_image
+	#pdf_name_retrieved=`echo $program_out | cut -d ' ' -f 1`
+	#number_page_retrieved=`echo $program_out | cut -d ' ' -f 2`
+
+	if [ $out_pdf_name = $pdf_name -a $number_page = $out_page_number  ] ;then
+		echo `test_rectangle 	$out_rect_x $out_rect_y $out_rect_width $out_rect_height $test_image`
 	else
 		echo "NO"
 	fi
 	
-	echo $res
 }
 WORKING_DIR=`pwd`
-DB_INC_STEP=1
+DB_INC_STEP=8
 OUTPUT_DIR="`readlink -f "../"`"
 EXECUTABLE="pdfextractor"
 PDF_DIR_MARINAI="`readlink -f "../database/pdf-marinai"`"
 PDF_DIR="`readlink -f "../database/pdf"`"
 IMG_DIR="`readlink -f "../database/pdf_img"`"
 DB_DIR="`readlink -f "../database"`"
-TEST_IMG_DIR="`readlink -f "../test-img-marinai"`"
+TEST_IMG_DIR="`readlink -f "../test/test-img-marinai"`"
 SQLITE_DB="../test/database_test.db"
 LIST_TEST_IMAGES="select distinct name from test_images"
 COUNT_QUERY="select distinct count(name) from test_images"
@@ -128,11 +131,16 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 		START=`date +%s%N`	
 
 		output_string=`cd .. && "$OUTPUT_DIR/$EXECUTABLE" "$TEST_IMG_DIR/$image_test" && cd $WORKING_DIR`
-
+		echo "PROGRAM OUT: $output_string"
+		
+		
 		FINISH=`date +%s%N`
 
-		if [ `matchDBResult $output_string $image_test`="YES" ] ; then 
+		if [ `matchDBResult $output_string $image_test` = "YES" ] ; then 
+			echo "Test case passed!"
 			let test_passed=test_passed+1
+		else
+			echo "Test case failed!"
 		fi
 		
         ELAPSED=` calculate "( $FINISH - $START)/1000000" `
@@ -141,8 +149,9 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	done	 
 
 	# SAVING TEST RESULT
-	total_testset_time=`calculate $total_testset_time/$number_of_test_image`
+	#total_testset_time=`calculate $total_testset_time/$number_of_test_image`
 	accuracy=`calculate $test_passed/$number_of_test_image`
+	echo "DB_PDF_SIZE  TOT_PAGES  TESTSET_TIME  ACCURACY" 
 	echo $DB_pdf_size $number_of_pages $total_testset_time $accuracy >> "$OUTPUT_DIR/$RESULT_FILE"
 
 done
