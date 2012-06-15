@@ -73,13 +73,14 @@ int main( int argc, char** argv )
 		      img_dbl, descr_width, descr_hist_bins );
   fprintf( stderr, "Found %d features.\n", n );
   
+  /*
   if( display )
     {
       draw_features( img, features, n );
       //display_big_img( img, img_file_name );
       cvWaitKey( 0 );
     }
-
+	*/
   if( out_file_name != NULL )
     export_features( out_file_name, features, n );
 

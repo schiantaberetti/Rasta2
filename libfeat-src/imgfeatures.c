@@ -66,7 +66,26 @@ int import_features( char* filename, int type, struct feature** feat )
   return n;
 }
 
+int export_no_features(char* filename)
+{
+	FILE* file;
+  if( ! ( file = fopen( filename, "w" ) ) )
+    {
+      fprintf( stderr, "Warning: error opening %s, %s, line %d\n",
+	       filename, __FILE__, __LINE__ );
+      return 1;
+    }
 
+  fprintf( file, "%d %d\n%d", 1, 0,0 );
+
+  if( fclose(file) )
+    {
+      fprintf( stderr, "Warning: file close error, %s, line %d\n",
+	       __FILE__, __LINE__ );
+      return 1;
+    }
+  return 0;
+}
 
 /*
   Exports a feature set to a file formatted depending on the type of
@@ -84,9 +103,10 @@ int export_features( char* filename, struct feature* feat, int n )
 
   if( n <= 0  ||  ! feat )
     {
-      fprintf( stderr, "Warning: no features to export, %s line %d\n",
-	       __FILE__, __LINE__ );
-      return 1;
+      fprintf( stderr, "Warning: no features to export, creating dummy file, %s n",
+	       filename);
+      r=export_no_features(filename);
+      return r;
     }
   type = feat[0].type;
   switch( type )
