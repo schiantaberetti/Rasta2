@@ -44,13 +44,13 @@ function test_rectangle(){
 					if [ `is_point_out $1 $2 $3 $4 $down_point` ];then
 						
 						echo "YES"
-					else echo "NO"
+					else echo "PARTIAL"
 					fi
-				else echo "NO"
+				else echo "PARTIAL"
 				fi
-			else echo "NO"
+			else echo "PARTIAL"
 			fi
-		else echo "NO"
+		else echo "PARTIAL"
 		fi
 	else echo "NO"
 	fi	
@@ -72,7 +72,7 @@ function matchDBResult(){
 
 	if [ $out_pdf_name = $pdf_name -a $number_page = $out_page_number  ] ;then
 		echo `test_rectangle 	$out_rect_x $out_rect_y $out_rect_width $out_rect_height $test_image`
-	else
+	else		
 		echo "NO"
 	fi
 	
@@ -127,6 +127,7 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	total_testset_time=0;        
 	number_of_query=0;
 	test_passed=0;
+	test_partially_passed=0;
 	for image_test in `sqlite3 "$SQLITE_DB" "$LIST_TEST_IMAGES"`; do
 		echo "Testing query = $image_test number = $number_of_query"
 		START=`date +%s%N`	
@@ -141,7 +142,12 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 			echo "Test case passed!"
 			let test_passed=test_passed+1
 		else
-			echo "Test case failed!"
+			if [ `matchDBResult $output_string $image_test` = "PARTIAL" ] ; then
+				echo "Test case partially passed!"
+				let test_partially_passed=test_partially_passed+1
+			else
+				echo "Test case failed!"
+			fi
 		fi
 		
         ELAPSED=` calculate "( $FINISH - $START)/1000000" `
@@ -152,8 +158,9 @@ while [ `ls -A $PDF_DIR_MARINAI/*.pdf | wc -l` -gt 0 ]; do
 	# SAVING TEST RESULT
 	#total_testset_time=`calculate $total_testset_time/$number_of_test_image`
 	accuracy=`calculate $test_passed/$number_of_test_image`
+	weak_accuracy=`calculate ($test_partially_passed+$test_passed)/$number_of_test_image`
 	echo "DB_PDF_SIZE  TOT_PAGES  TESTSET_TIME  ACCURACY" 
-	echo $DB_pdf_size $number_of_pages $total_testset_time $accuracy >> "$OUTPUT_DIR/$RESULT_FILE"
+	echo $DB_pdf_size $number_of_pages $total_testset_time $accuracy $weak_accuracy >> "$OUTPUT_DIR/$RESULT_FILE"
 
 done
 
