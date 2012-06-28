@@ -10,7 +10,7 @@ OBJS= $(SRC_DIR)/match.o $(SRC_DIR)/pdftotext.o $(SRC_DIR)/sift_template.o $(SRC
 EXECUTABLE = pdfextractor
 
 all : libhead libfeat objs tools 
-	g++ client.cc -I $(INCLUDE_DIR) -w $(OBJS) $(SQLITE_LIB) $(POPPLER_LIB) $(OPENCV_LIB) $(JHEAD_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
+	g++ client.cc -I $(INCLUDE_DIR) -w $(OBJS)  $(SQLITE_LIB) $(POPPLER_LIB) $(OPENCV_LIB) $(JHEAD_LIB) $(FEAT_LIB) -o $(EXECUTABLE)  
 
 tools : libfeat
 	make -C tools/

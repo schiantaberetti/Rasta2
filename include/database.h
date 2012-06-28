@@ -18,6 +18,7 @@
 #define DB_SIFT_FILENAME 1
 #define DB_SIFT_PATH 2
 #define DB_SIFT_ID_PAGES 3
+#define LOGFILE	"log.txt"
 
 struct DBInfo{
 //Info from db
@@ -37,6 +38,9 @@ struct SiftFileData{
 	int id_pages;
 	char *uri;
 };
+
+void logOrderOfMatching(int n);
+void logToFile(char *note);
 
 extern void openDB(char* databaseFile,sqlite3 **db);
 

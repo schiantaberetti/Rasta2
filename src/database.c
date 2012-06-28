@@ -2,7 +2,21 @@
 #include <stdio.h>
 #include "sqlite3.h"
 
-
+void logOrderOfMatching(int n)
+{
+	char note[80];
+	sprintf(note,"Page found in order: %d",n);
+	logToFile(note);
+}
+void logToFile(char *note)
+{
+	FILE *file;
+	file = fopen(LOGFILE,"a+"); /* apend file (add text to
+	a file or create a file if it does not exist.*/
+	fprintf(file,"%s\n",note); /*writes*/
+	fclose(file); /*done!*/
+	return 0; 
+}
 
 void openDB(char* databaseFile,sqlite3 **db){
 	/*open a db in the sqlite format*/

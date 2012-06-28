@@ -14,10 +14,9 @@ struct SiftThread {
 	pthread_t thread;
 
 	char *test_sift_file;
-
+	int matches;
 	struct SiftFileData *siftMetaData;
 };
-
 
 IplImage *preProcessTestImage(char *image_filename,CvPoint *tl,CvPoint *br)
 /*This function returns a cropped cleaned image of image_filename and compute
@@ -65,6 +64,7 @@ int startSiftMatchJob(struct SiftThread* job)
 #ifdef DEBUG
 	printf("File %s, trovati %d matches.\n",siftMetaData->name,matches);
 #endif
+	job->matches=matches;
 	return matches; 
 }
 void destroySiftThreadJob(struct SiftThread *job)
@@ -114,6 +114,67 @@ struct SiftFileData *siftJobsResultProcessor(struct list_head* thread_list)
 	
 	return db_target_sift;
 }
+struct SiftFileData *getSiftData(struct list_head *thread_list,int position)
+{
+	struct SiftThread *job;
+	struct SiftFileData *db_target_sift=NULL;
+	int counter=0;
+	struct list_head* iter,*q;
+	list_for_each_safe(iter,q, thread_list){
+		
+		if(counter==position)
+		{
+			job = container_of(iter,struct SiftThread,list);
+			db_target_sift=dynCopy(job->siftMetaData);
+		}
+		counter++;
+	}
+	return db_target_sift;
+}
+int hasMoreMatch(struct list_head* l_a,struct list_head * l_b)
+{
+		struct SiftThread *a,*b;
+		a=container_of(l_a,struct SiftThread,list);
+		b=container_of(l_b,struct SiftThread,list);
+		if((a->matches)<(b->matches))
+			return 1;
+		if((a->matches)>(b->matches))
+			return -1;
+		return 0;
+	
+}
+void destroyJobs(struct list_head* thread_list)
+{
+	struct SiftThread *job;
+	
+	struct list_head* iter,*q;
+	list_for_each_safe(iter,q, thread_list){
+		job = container_of(iter,struct SiftThread,list);
+
+		list_del(iter);
+		destroySiftThreadJob(job);
+	}
+}
+
+void jobsProcessor(struct list_head* thread_list)
+{	
+	struct SiftThread *job;
+	int matches;
+	
+	struct list_head* iter,*q;
+	list_for_each_safe(iter,q, thread_list){
+		job = container_of(iter,struct SiftThread,list);
+#ifdef DEBUG 
+			printf("Waiting: %s\n",job->siftMetaData->name); 
+#endif
+		pthread_join( job->thread, (&matches));
+	}
+
+	list_sort(thread_list,hasMoreMatch);
+
+}
+
+
 struct SiftThread* createSiftJob(char *test_siftFilename,struct SiftFileData *siftMetaData)
 {
 	struct SiftThread* job;
@@ -153,6 +214,36 @@ char *getBestMatchInDB(char *test_siftFilename)
 	free(thread_list);
 	return siftMetaData;
 }
+struct list_head* getJobsResults(char *test_siftFilename)
+/*Compare sifts in test_siftFilename with the sifts in the files of the DB and
+ * returns list of threads with their results.*/
+{
+	struct list_head* thread_list=(struct list_head*)malloc(sizeof(struct list_head));
+	INIT_LIST_HEAD(thread_list);
+	struct SiftThread *job=NULL;
+
+	struct SiftFileData *siftMetaData=NULL; //Iterator
+	
+	sqlite3 *db;
+	sqlite3_stmt* stmt;
+	openDB(DB_PATH,&db);	
+	queryDB("SELECT * FROM sifts",&stmt,&db);
+	
+	while(fetchSiftQuery(&stmt,&siftMetaData)){
+#ifdef DEBUG
+		printf("SiftData MetaInfo:\nname: %s\npath: %s\nid_sift: %d\nid_pages: %d\n",siftMetaData->name,siftMetaData->path,siftMetaData->id_sift,siftMetaData->id_pages);
+#endif
+		job=createSiftJob(test_siftFilename, siftMetaData); //INIT the job structure
+		pthread_create( &(job->thread), NULL, startSiftMatchJob, job);			// Release the job
+		list_add_tail(&(job->list),thread_list)		;					// Add the job to the pending jobs list
+	}
+	closeDB(&db);
+	jobsProcessor(thread_list);
+	//free(thread_list);
+	return thread_list;
+}
+
+
 char *getBestMatchInDB_unparallel(char *test_siftFilename)
 /*Compare sifts in test_siftFilename with the sifts in the files of the DB and
  * returns the name of the sift file that best matchs.*/
@@ -277,44 +368,60 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 #ifdef DEBUG
 	printf("Beginning research in DB.\n");
 #endif
-	db_target_sift=getBestMatchInDB(test_siftFilename);
+	struct list_head *thread_list;
+	thread_list=getJobsResults(test_siftFilename);//db_target_sift=getBestMatchInDB(test_siftFilename);
 #ifdef DEBUG
-	printf("Winner is: %s.\n",db_target_sift->uri);
+	//printf("Winner is: %s.\n",db_target_sift->uri);
 #endif
-	if(db_target_sift!=NULL)
+	int i=0;
+	do
 	{
-		getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
-#ifdef DEBUG
-		printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
-#endif
-		
-		int useless;
-		transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);
-		
-		if(transformation_matrix!=NULL)
+		db_target_sift=getSiftData(thread_list,i);
+		if(db_target_sift!=NULL)
 		{
-			perspectiveTrasformation(transformation_matrix,&br);
-			perspectiveTrasformation(transformation_matrix,&tl);
+			getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
+	#ifdef DEBUG
+			printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
+	#endif
+			
+			int useless;
+			transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);
+			
+			if(transformation_matrix!=NULL)
+			{
+				perspectiveTrasformation(transformation_matrix,&br);
+				perspectiveTrasformation(transformation_matrix,&tl);
 
-			*tlx = tl.x;
-			*tly = tl.y;
-			*width = br.x - tl.x;
-			*height = br.y - tl.y;
-#ifdef DEBUG
-			showResult(db_target_sift,&tl,&br);
-#endif
-			cvReleaseMat(&transformation_matrix);
-			destroySiftFileData(db_target_sift);
-			return pdfFilename;
+				*tlx = tl.x;
+				*tly = tl.y;
+				*width = br.x - tl.x;
+				*height = br.y - tl.y;
+	#ifdef DEBUG
+				showResult(db_target_sift,&tl,&br);
+	#endif
+				
+				destroySiftFileData(db_target_sift);
+			}
+			else
+			{
+				destroySiftFileData(db_target_sift);
+				dynStringAssignement(&pdfFilename,PDF_NOT_FOUND);
+			}
 		}
 		else
-		{
-			destroySiftFileData(db_target_sift);
-			return PDF_NOT_FOUND;
-		}
-	}
-	else
-		return PDF_NOT_FOUND;
+			dynStringAssignement(&pdfFilename,PDF_NOT_FOUND);
+
+	}while(i<RESULTS_NUMBER && (transformation_matrix==NULL));
+	
+	if(transformation_matrix!=NULL)
+	{
+		cvReleaseMat(&transformation_matrix);
+		logToFile(test_image);
+		logOrderOfMatching(i);
+	}	
+	destroyJobs(thread_list);
+	free(thread_list);
+	return pdfFilename;
 }
 
 int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height)

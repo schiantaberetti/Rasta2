@@ -4,7 +4,8 @@
 
 #define PDF_NOT_FOUND "PDFNotFound"
 //AUMENTARE
-#define CROP_DIM	2000
+#define CROP_DIM	1500
+#define RESULTS_NUMBER	20
 
 
 extern int getTextCircledPosition( char* pdf_image_name,char* photo_name,int* tlx,int* tly,int* width,int* height);
