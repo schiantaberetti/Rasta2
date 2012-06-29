@@ -363,7 +363,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
  * set the page_number pointer to the right page in the pdf and
  * set the coords and dimensions wrt the red circled area in the test_image.*/
 {
+#ifdef DEBUG
 	deleteLog();
+#endif
 	CvPoint br,tl;
 	IplImage *input_image;
 	CvMat *transformation_matrix=NULL;
@@ -385,8 +387,9 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 #endif
 	struct list_head *thread_list;
 	thread_list=getJobsResults(test_siftFilename);//db_target_sift=getBestMatchInDB(test_siftFilename);
-
+#ifdef DEBUG
 	logFirstSiftNames(thread_list);
+#endif
 	int i=0;
 	do
 	{
