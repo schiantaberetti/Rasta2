@@ -412,7 +412,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 				*width = br.x - tl.x;
 				*height = br.y - tl.y;
 	#ifdef DEBUG
-				showResult(db_target_sift,&tl,&br);
+				if(*width>0) showResult(db_target_sift,&tl,&br);
 	#endif
 				
 				destroySiftFileData(db_target_sift);
@@ -427,7 +427,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 			dynStringAssignement(&pdfFilename,PDF_NOT_FOUND);
 
 	i++;
-	}while(i<NUMBER_OF_TRIES && (transformation_matrix==NULL));
+	}while(i<NUMBER_OF_TRIES && (transformation_matrix==NULL || (*width)==0 || (*height)==0));
 	
 	if(transformation_matrix!=NULL)
 	{
