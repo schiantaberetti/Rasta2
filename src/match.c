@@ -281,6 +281,20 @@ char *getBestMatchInDB_unparallel(char *test_siftFilename)
 	return db_target_sift;
 }
 
+void logFirstSiftNames(struct list_head *thread_list)
+{
+	struct SiftThread *job;
+	int count=0;
+	
+	struct list_head* iter,*q;
+	list_for_each_safe(iter,q, thread_list){
+		job = container_of(iter,struct SiftThread,list);
+		logToFile(job->siftMetaData->name);
+		if (count==RESULTS_NUMBER-1) break;
+		count++;
+	}
+	
+}
 void getSiftPdfCoords(struct SiftFileData* db_sift,char **pdfFilename,int *page_number)
 /*Return the pdf and the page number to which the sift is related*/
 {
@@ -349,9 +363,10 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
  * set the page_number pointer to the right page in the pdf and
  * set the coords and dimensions wrt the red circled area in the test_image.*/
 {
+	deleteLog();
 	CvPoint br,tl;
 	IplImage *input_image;
-	CvMat *transformation_matrix;
+	CvMat *transformation_matrix=NULL;
 	char *test_siftFilename = "/tmp/testSiftFile";
 	struct SiftFileData *db_target_sift=NULL;
 	char *pdfFilename=NULL;
@@ -373,6 +388,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 #ifdef DEBUG
 	//printf("Winner is: %s.\n",db_target_sift->uri);
 #endif
+	logFirstSiftNames(thread_list);
 	int i=0;
 	do
 	{
@@ -380,6 +396,7 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 		if(db_target_sift!=NULL)
 		{
 			getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
+			
 	#ifdef DEBUG
 			printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
 	#endif
@@ -411,7 +428,8 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 		else
 			dynStringAssignement(&pdfFilename,PDF_NOT_FOUND);
 
-	}while(i<RESULTS_NUMBER && (transformation_matrix==NULL));
+	i++;
+	}while(i<NUMBER_OF_TRIES && (transformation_matrix==NULL));
 	
 	if(transformation_matrix!=NULL)
 	{

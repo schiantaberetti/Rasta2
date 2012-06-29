@@ -8,6 +8,10 @@ void logOrderOfMatching(int n)
 	sprintf(note,"Page found in order: %d",n);
 	logToFile(note);
 }
+void deleteLog()
+{
+	remove(LOGFILE);
+}
 void logToFile(char *note)
 {
 	FILE *file;
