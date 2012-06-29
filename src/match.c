@@ -385,21 +385,19 @@ char* findPdfFileInDB(char* test_image,int* tlx,int* tly,int* width,int* height,
 #endif
 	struct list_head *thread_list;
 	thread_list=getJobsResults(test_siftFilename);//db_target_sift=getBestMatchInDB(test_siftFilename);
-#ifdef DEBUG
-	//printf("Winner is: %s.\n",db_target_sift->uri);
-#endif
+
 	logFirstSiftNames(thread_list);
 	int i=0;
 	do
 	{
+#ifdef DEBUG
+		printf("Attempt number: %d.\n",i);
+#endif
+
 		db_target_sift=getSiftData(thread_list,i);
 		if(db_target_sift!=NULL)
 		{
 			getSiftPdfCoords(db_target_sift,&pdfFilename,page_number);
-			
-	#ifdef DEBUG
-			printf("pdfFilename: %s\nPage number: %d.\n",pdfFilename,*page_number);
-	#endif
 			
 			int useless;
 			transformation_matrix=getProjectionAndMatchText(test_siftFilename,db_target_sift->uri,&useless);
